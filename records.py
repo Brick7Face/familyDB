@@ -1,4 +1,6 @@
 # incomplete - dates are not complete, birth and deathplaces need updated
+
+# PersonID INT, Name TINYTEXT NOT NULL, ParentsMarriageID INT, DOB DATE, DOD DATE, Birthplace TINYTEXT, Deathplace TINYTEXT
 personRecords = [
 
     ( 1, 'Queen Victoria', None, '1819-05-24', '1901-01-22', 'Kensington Palace, London', 'Osborne House, Isle of Wight' ),
@@ -30,6 +32,7 @@ personRecords = [
 
 ]
 
+# MarriageID INT, Partner1 INT, Partner2 INT, Date DATE
 marriageRecords = [
     ( 1, 11, 1, '1840-02-10' ),     # albert and victoria
     ( 2, 12, 2, None ),             # edward 7 and alexandra

@@ -7,16 +7,18 @@ from records import personRecords, marriageRecords
 from questions import menuQuestions, searchQuestions
 from Person import Person
 
-# Print the menu using PyInquirer package
+# Print the main menu using PyInquirer package
 def printMenu(options):
     questions = options
     answers = prompt(questions, style=custom_style_2)
     return answers['choice']
 
+# Connect to/create the sqlite3 database
 def connect():
     sqlDB = sqlite3.connect('family.db')
     return sqlDB
 
+# Populate the database using the imported lists from records.py
 def populate(cursor):
     cursor.execute("DROP TABLE IF EXISTS Marriage")
     cursor.execute("DROP TABLE IF EXISTS Person")
@@ -32,6 +34,7 @@ def populate(cursor):
     cursor.executemany(sql2, marriageRecords)
     print(cursor.rowcount, " records were inserted into table Marriage.")
 
+# Search the database by name, birthdate, birthplace or deathplace
 def searchDB(cursor, filter):
     print("\n")
     if filter=="":
@@ -61,6 +64,7 @@ def searchDB(cursor, filter):
         person.displayPerson()
     print("\n")
 
+# Print the family of an inputted person by name
 def relate(cursor):
     proceed = False
     person1 = ""
