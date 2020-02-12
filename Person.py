@@ -22,6 +22,7 @@ class Person:
     def displayPerson(self):
         print("Name:", self.name, "\nBorn:", self.dob, "in", self.birthplace, "\nDied:", self.dod, self.deathplace, "(Age", str(self.age) + ")")
         print("-----------")
+        return ("Name: " + self.name + "\nBorn: " + self.dob + " in " + self.birthplace + "\nDied: " + self.dod + " " + self.deathplace + "(Age ", str(self.age) + " )")
 
     # calculate the age in years and return it as an int
     def calcAge(self, dob, dod):

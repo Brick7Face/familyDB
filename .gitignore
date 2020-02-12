@@ -2,3 +2,6 @@
 *.db
 .DS_Store
 familyDBRecords/
+*.spec
+build/
+dist/
