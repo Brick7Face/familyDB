@@ -5,3 +5,4 @@ familyDBRecords/
 *.spec
 build/
 dist/
+bin/
