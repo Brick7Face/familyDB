@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from familyDBRecords.records import personRecords, marriageRecords
+from records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
@@ -35,7 +35,6 @@ class FamilyDB:
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
-        print("\n")
         if filter=="":
             filter = "Name"
         query = ""
@@ -60,7 +59,6 @@ class FamilyDB:
                 person.displayPerson()  # return this string for printing to window
         except (ValueError):
             print("ValueError: check the entries in your records file.")
-        print("\n")
 
     # Print the family of an inputted person by name
     def relate(self, cursor, person1):
@@ -132,8 +130,6 @@ class FamilyDB:
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             person.displayPerson()
-
-        print("\n")
 
         # Aunts/uncles - select * from Person where ParentsMarriageID in (select parentsMarriageID from (select * from Person inner join Marriage on (PersonID=Partner1 or PersonID=Partner2)) where MarriageID = (select parentsMarriageID from Person where Name = \'" + person1 + "\'));
 

@@ -50,26 +50,26 @@ class MainMenu(tk.Frame):
         top_frame = tk.Frame(self, height = 40)
         mid_frame = tk.Frame(self)
         bottom_frame = tk.Frame(self)
-        self.display_frame = tk.Frame(self)
+        display_frame = tk.Frame(self)
 
         search_button = ttk.Button(mid_frame, text = 'Search', width = 20, command = lambda: master.switch(FilterMenu))
         family_button = ttk.Button(mid_frame, text = 'Family', width = 20, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
         populate_button = ttk.Button(mid_frame, text = 'Populate Database', width = 20, command = master.populate)
         quit_button = ttk.Button(bottom_frame, text = 'Quit', width = 15, command = master.callback)
-        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
+        displayBox = tk.Text(display_frame, state=tk.DISABLED)
 
-        self.redirector = StdRedirector(self.displayBox)
+        self.redirector = StdRedirector(displayBox)
 
         search_button.pack(side = 'top')
         family_button.pack(side = 'top')
         populate_button.pack(side = 'bottom')
         quit_button.pack(side = 'left')
-        self.displayBox.pack(side = 'bottom')
+        displayBox.pack(side = 'bottom')
 
         top_frame.pack()
         mid_frame.pack()
         bottom_frame.pack()
-        self.display_frame.pack()
+        display_frame.pack()
 
     def redirect(self):
         sys.stdout = self.redirector
@@ -82,28 +82,28 @@ class FilterMenu(tk.Frame):
         top_frame = tk.Frame(self, height = 40)
         mid_frame = tk.Frame(self)
         bottom_frame = tk.Frame(self)
-        self.display_frame = tk.Frame(self)
+        display_frame = tk.Frame(self)
 
         name_button = ttk.Button(mid_frame, text = 'Name', width = 20, command = lambda: master.switch(EntryMenu, "Enter name", "Name"))
         dob_button = ttk.Button(mid_frame, text = 'Birthdate', width = 20, command = lambda: master.switch(EntryMenu, "Enter birthday YYYY-MM-DD", "Birthday"))
         birthplace_button = ttk.Button(mid_frame, text = 'Birthplace', width = 20, command = lambda: master.switch(EntryMenu, "Enter birthplace", "Birthplace"))
         deathplace_button = ttk.Button(mid_frame, text = 'Deathplace', width = 20, command = lambda: master.switch(EntryMenu, "Enter deathplace", "Deathplace"))
         back_button = ttk.Button(bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
-        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
+        displayBox = tk.Text(display_frame, state=tk.DISABLED)
 
-        self.redirector = StdRedirector(self.displayBox)
+        self.redirector = StdRedirector(displayBox)
 
         name_button.pack(side = 'top')
         dob_button.pack(side = 'top')
         birthplace_button.pack(side = 'top')
         deathplace_button.pack(side = 'top')
         back_button.pack(side = 'bottom')
-        self.displayBox.pack(side = 'bottom')
+        displayBox.pack(side = 'bottom')
 
         top_frame.pack()
         mid_frame.pack()
         bottom_frame.pack()
-        self.display_frame.pack()
+        display_frame.pack()
 
     def redirect(self):
         sys.stdout = self.redirector
@@ -119,27 +119,27 @@ class EntryMenu(tk.Frame):
         top_frame = tk.Frame(self, height = 40)
         mid_frame = tk.Frame(self)
         bottom_frame = tk.Frame(self)
-        self.display_frame = tk.Frame(self)
+        display_frame = tk.Frame(self)
 
         self.labelW = tk.Label(mid_frame)
         self.entryW = tk.Entry(mid_frame)
 
         self.submit_button = ttk.Button(mid_frame)
         self.back_button = ttk.Button(bottom_frame, text = 'Return', width = 15)
-        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
+        displayBox = tk.Text(display_frame, state=tk.DISABLED)
 
-        self.redirector = StdRedirector(self.displayBox)
+        self.redirector = StdRedirector(displayBox)
 
         self.labelW.pack(side = 'left')
         self.entryW.pack(side = 'right')
         self.submit_button.pack(side = 'right')
         self.back_button.pack(side = 'bottom')
-        self.displayBox.pack(side = 'bottom')
+        displayBox.pack(side = 'bottom')
 
         top_frame.pack()
         mid_frame.pack()
         bottom_frame.pack()
-        self.display_frame.pack()
+        display_frame.pack()
 
     def search(self, filter):
         db.choice("Search", self.filter, self.entryW.get())
