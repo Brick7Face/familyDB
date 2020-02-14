@@ -13,103 +13,158 @@ class StdRedirector(object):
         self.text_space.see("end")
         self.text_space.config(state=tk.DISABLED)
 
-class Screen:
-    def __init__(self):
-        self.db = familyDB.FamilyDB()
-        #create root window
-        self.root = tk.Tk()
-        self.mainMenu()
+class Main(tk.Tk):
+    def __init__(self, **kwargs):
+        tk.Tk.__init__(self, **kwargs)
 
-    def clear(self):
-        self.mid_frame.destroy()
-        self.bottom_frame.destroy()
-        self.root.quit()
+        self.geometry("500x500")
+        self.title("Family Viewer")
 
-    def initFrames(self):
-        self.mid_frame = tk.Frame(self.root)
-        self.bottom_frame = tk.Frame(self.root)
+        self.frames = {}
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
+        for frame in (MainMenu, EntryMenu, FilterMenu):
+            f = frame(self)
+            f.grid(row=0, column=0, sticky='nsew')
+            self.frames[frame] = f
+        self.switch(MainMenu)
 
-    def mainMenu(self):
-        try:
-            self.clear()
-            self.top_frame.destroy()
-            self.display_frame.destroy()
-        except: (AttributeError)
-        self.top_frame = tk.Frame(self.root, height = 40)
-        self.initFrames()
-        self.display_frame = tk.Frame(self.root)
+    def switch(self, frame, label="", filter=""):
+        f = self.frames[frame]
+        if (frame==EntryMenu):
+            f.setLabel(label)
+            f.setFilter(filter)
+        f.tkraise()
+        f.redirect()
 
-        self.search_button = ttk.Button(self.mid_frame, text = 'Search', width = 20, command = self.filterMenu)
-        self.family_button = ttk.Button(self.mid_frame, text = 'Family', width = 20, command = lambda: self.entryMenu("Enter full name", ""))
-        self.populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 20, command = self.populate)
-        self.quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 15, command = self.root.destroy)
-        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
-
-        sys.stdout = StdRedirector(self.displayBox)
-        sys.stderr = StdRedirector(self.displayBox)
-
-        self.search_button.pack(side = 'top')
-        self.family_button.pack(side = 'top')
-        self.populate_button.pack(side = 'bottom')
-        self.quit_button.pack(side = 'left')
-        self.displayBox.pack(side = 'bottom')
-
-        #Now pack the frames also
-        self.top_frame.pack()
-        self.mid_frame.pack()
-        self.bottom_frame.pack()
-        self.display_frame.pack()
-        self.root.mainloop()
-
-    def filterMenu(self):
-        self.clear()
-        self.initFrames()
-
-        self.name_button = ttk.Button(self.mid_frame, text = 'Name', width = 20, command = lambda: self.entryMenu("Enter name", "Name"))
-        self.dob_button = ttk.Button(self.mid_frame, text = 'Birthdate', width = 20, command = lambda: self.entryMenu("Enter birthday YYYY-MM-DD", "Birthday"))
-        self.birthplace_button = ttk.Button(self.mid_frame, text = 'Birthplace', width = 20, command = lambda: self.entryMenu("Enter birthplace", "Birthplace"))
-        self.deathplace_button = ttk.Button(self.mid_frame, text = 'Deathplace', width = 20, command = lambda: self.entryMenu("Enter deathplace", "Deathplace"))
-        self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = self.mainMenu)
-
-        self.name_button.pack(side = 'top')
-        self.dob_button.pack(side = 'top')
-        self.birthplace_button.pack(side = 'top')
-        self.deathplace_button.pack(side = 'top')
-        self.back_button.pack(side = 'bottom')
-
-        self.mid_frame.pack()
-        self.bottom_frame.pack()
-        self.root.mainloop()
-
-    def entryMenu(self, label, filter):
-        self.clear()
-        self.initFrames()
-
-        self.label = tk.Label(self.mid_frame, text = label)
-        self.nameEntry = tk.Entry(self.mid_frame)
-        if (filter==""):
-            self.submit_button = ttk.Button(self.mid_frame, text = 'Submit', command = self.family)
-            self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = self.mainMenu)
-        else:
-            self.submit_button = ttk.Button(self.mid_frame, text = 'Search', command = lambda: self.search(filter))
-            self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = self.filterMenu)
-
-        self.label.pack(side = 'left')
-        self.nameEntry.pack(side = 'right')
-        self.submit_button.pack(side = 'right')
-        self.back_button.pack(side = 'bottom')
-
-        self.mid_frame.pack()
-        self.bottom_frame.pack()
-        self.root.mainloop()
-
-    def search(self, filter):
-        self.db.choice("Search", filter, self.nameEntry.get())
-
-    def family(self):
-        self.db.choice("Family", "", self.nameEntry.get())
+    def callback(self):
+        self.destroy()
 
     def populate(self):
-        self.db.choice("Populate", "", "")
+        db.choice("Populate", "", "")
 
-gui = Screen()
+class MainMenu(tk.Frame):
+    def __init__(self, master=None, **kwargs):
+        tk.Frame.__init__(self, master, **kwargs)
+
+        top_frame = tk.Frame(self, height = 40)
+        mid_frame = tk.Frame(self)
+        bottom_frame = tk.Frame(self)
+        self.display_frame = tk.Frame(self)
+
+        search_button = ttk.Button(mid_frame, text = 'Search', width = 20, command = lambda: master.switch(FilterMenu))
+        family_button = ttk.Button(mid_frame, text = 'Family', width = 20, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
+        populate_button = ttk.Button(mid_frame, text = 'Populate Database', width = 20, command = master.populate)
+        quit_button = ttk.Button(bottom_frame, text = 'Quit', width = 15, command = master.callback)
+        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
+
+        self.redirector = StdRedirector(self.displayBox)
+
+        search_button.pack(side = 'top')
+        family_button.pack(side = 'top')
+        populate_button.pack(side = 'bottom')
+        quit_button.pack(side = 'left')
+        self.displayBox.pack(side = 'bottom')
+
+        top_frame.pack()
+        mid_frame.pack()
+        bottom_frame.pack()
+        self.display_frame.pack()
+
+    def redirect(self):
+        sys.stdout = self.redirector
+        sys.stderr = self.redirector
+
+class FilterMenu(tk.Frame):
+    def __init__(self, master=None, **kwargs):
+        tk.Frame.__init__(self, master, **kwargs)
+
+        top_frame = tk.Frame(self, height = 40)
+        mid_frame = tk.Frame(self)
+        bottom_frame = tk.Frame(self)
+        self.display_frame = tk.Frame(self)
+
+        name_button = ttk.Button(mid_frame, text = 'Name', width = 20, command = lambda: master.switch(EntryMenu, "Enter name", "Name"))
+        dob_button = ttk.Button(mid_frame, text = 'Birthdate', width = 20, command = lambda: master.switch(EntryMenu, "Enter birthday YYYY-MM-DD", "Birthday"))
+        birthplace_button = ttk.Button(mid_frame, text = 'Birthplace', width = 20, command = lambda: master.switch(EntryMenu, "Enter birthplace", "Birthplace"))
+        deathplace_button = ttk.Button(mid_frame, text = 'Deathplace', width = 20, command = lambda: master.switch(EntryMenu, "Enter deathplace", "Deathplace"))
+        back_button = ttk.Button(bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
+        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
+
+        self.redirector = StdRedirector(self.displayBox)
+
+        name_button.pack(side = 'top')
+        dob_button.pack(side = 'top')
+        birthplace_button.pack(side = 'top')
+        deathplace_button.pack(side = 'top')
+        back_button.pack(side = 'bottom')
+        self.displayBox.pack(side = 'bottom')
+
+        top_frame.pack()
+        mid_frame.pack()
+        bottom_frame.pack()
+        self.display_frame.pack()
+
+    def redirect(self):
+        sys.stdout = self.redirector
+        sys.stderr = self.redirector
+
+class EntryMenu(tk.Frame):
+    def __init__(self, master=None, **kwargs):
+        tk.Frame.__init__(self, master, **kwargs)
+
+        self.filter = ""
+        self.master = master
+
+        top_frame = tk.Frame(self, height = 40)
+        mid_frame = tk.Frame(self)
+        bottom_frame = tk.Frame(self)
+        self.display_frame = tk.Frame(self)
+
+        self.labelW = tk.Label(mid_frame)
+        self.entryW = tk.Entry(mid_frame)
+
+        self.submit_button = ttk.Button(mid_frame)
+        self.back_button = ttk.Button(bottom_frame, text = 'Return', width = 15)
+        self.displayBox = tk.Text(self.display_frame, state=tk.DISABLED)
+
+        self.redirector = StdRedirector(self.displayBox)
+
+        self.labelW.pack(side = 'left')
+        self.entryW.pack(side = 'right')
+        self.submit_button.pack(side = 'right')
+        self.back_button.pack(side = 'bottom')
+        self.displayBox.pack(side = 'bottom')
+
+        top_frame.pack()
+        mid_frame.pack()
+        bottom_frame.pack()
+        self.display_frame.pack()
+
+    def search(self, filter):
+        db.choice("Search", self.filter, self.entryW.get())
+
+    def family(self):
+        db.choice("Family", "", self.entryW.get())
+
+    def setLabel(self, label):
+        self.labelW.config(text = label)
+        self.labelW.update()
+
+    def setFilter(self, filter):
+        self.filter = filter
+        if (self.filter==""):
+            self.submit_button.config(text = 'Submit', command = self.family)
+            self.back_button.config(command = lambda: self.master.switch(MainMenu))
+        else:
+            self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter))
+            self.back_button.config(command = lambda: self.master.switch(FilterMenu))
+
+    def redirect(self):
+        sys.stdout = self.redirector
+        sys.stderr = self.redirector
+
+
+db = familyDB.FamilyDB()
+root = Main()
+root.mainloop()
