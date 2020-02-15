@@ -27,17 +27,24 @@ class Person:
     # calculate the age in years and return it as an int
     def calcAge(self, dob, dod):
         age = None
+        dobStr = dob.split("-")
+        if (dobStr[0]=='0000'):
+            return age
+        if (dobStr[1]=='00'):
+            dobStr[1] = '01'
+        if (dobStr[2]=='00'):
+            dobStr[2] = '01'
         if (dod==None):
-            dobStr = dob.split("-")
-            if (dobStr[0]=='0000'):
-                return age
             ageDT = dt.today() - dt(int(dobStr[0]), int(dobStr[1]), int(dobStr[2]))
             age = int(ageDT.days / 365.25)
         else:
-            dobStr = dob.split("-")
             dodStr = dod.split("-")
             if (dobStr[0]=='0000' or dodStr[0]=='0000'):
                 return age
+            if (dodStr[1]=='00'):
+                dodStr[1] = '01'
+            if (dodStr[2]=='00'):
+                dodStr[2] = '01'
             ageDT = dt(int(dodStr[0]), int(dodStr[1]), int(dodStr[2])) - dt(int(dobStr[0]), int(dobStr[1]), int(dobStr[2]))
             age = int(ageDT.days / 365.25)
         return age
