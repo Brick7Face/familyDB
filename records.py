@@ -6,7 +6,7 @@ personRecords = [
     ( 1, 'Queen Victoria', None, '1819-05-24', '1901-01-22', 'Kensington Palace, London', 'Osborne House, Isle of Wight' ),
     ( 2, 'Princess Alexandra of Denmark', None, '1844-00-00', '1925-00-00', 'Unknown', 'Unknown' ),
     ( 3, 'Queen Mary', None, '1867-00-00', '1953-00-00', 'Unknown', 'Unknown' ),
-    ( 4, 'Mrs. Simpon', None, '1896-00-00', '1986-00-00', 'Unknown', 'Unknown' ),
+    ( 4, 'Mrs. Simpson', None, '1896-00-00', '1986-00-00', 'Unknown', 'Unknown' ),
     ( 5, 'Lady Elizabeth Bowes-Lyon', None, '1900-00-00', '2002-00-00', 'Unknown', 'Unknown' ),
     ( 6, 'Queen Elizabeth II', 5, '1926-00-00', None, 'Unknown', None ),
     ( 7, 'Princess Margaret', 5, '1930-00-00', '2002-00-00', 'Unknown', 'Unknown' ),

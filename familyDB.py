@@ -56,7 +56,7 @@ class FamilyDB:
                 print("No results.")
             for record in result:
                 person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-                person.displayPerson()  # return this string for printing to window
+                person.displayPerson()
         except (ValueError):
             print("ValueError: check the entries in your records file.")
 
