@@ -26,7 +26,7 @@ class Main(tk.Tk):
         tk.Tk.__init__(self, **kwargs)
 
         # set window attributes
-        self.geometry("500x500")
+        self.geometry("1920x1080")
         self.title("Family Viewer")
 
         # create dict of frame elements, representing frame stack
@@ -34,7 +34,7 @@ class Main(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         # add frame types to stack, creating 1 instance of each
-        for frame in (MainMenu, EntryMenu, FilterMenu):
+        for frame in (MainMenu, PopulateMenu, EntryMenu, FilterMenu):
             f = frame(self)
             f.grid(row=0, column=0, sticky='nsew')
             self.frames[frame] = f
@@ -71,7 +71,7 @@ class MainMenu(tk.Frame):
         # create widgets
         search_button = ttk.Button(mid_frame, text = 'Search', width = 20, command = lambda: master.switch(FilterMenu))
         family_button = ttk.Button(mid_frame, text = 'Family', width = 20, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
-        populate_button = ttk.Button(mid_frame, text = 'Populate Database', width = 20, command = master.populate)
+        populate_button = ttk.Button(mid_frame, text = 'Populate Database', width = 20, command = lambda: master.switch(PopulateMenu))
         quit_button = ttk.Button(bottom_frame, text = 'Quit', width = 15, command = master.callback)
         displayBox = tk.Text(display_frame, state=tk.DISABLED)
 
@@ -133,7 +133,48 @@ class FilterMenu(tk.Frame):
         sys.stdout = self.redirector
         sys.stderr = self.redirector
 
-# similar to above, but this is the search frame
+# similar to above; directs populate functionality
+class PopulateMenu(tk.Frame):
+    # will add records to db from user input - need to delete this function and create another frame menu
+    def addRecord(self):
+        pass
+
+    def delRecord(self):
+        pass
+
+    def __init__(self, master=None, **kwargs):
+        tk.Frame.__init__(self, master, **kwargs)
+
+        top_frame = tk.Frame(self, height = 40)
+        mid_frame = tk.Frame(self)
+        bottom_frame = tk.Frame(self)
+        display_frame = tk.Frame(self)
+
+        file_button = ttk.Button(mid_frame, text = 'Read from records.py', width = 20, command = master.populate)
+        add_button = ttk.Button(mid_frame, text = 'Add record', width = 20, command = self.addRecord)
+        delete_button = ttk.Button(mid_frame, text = 'Delete record', width = 20, command = self.delRecord)
+        back_button = ttk.Button(bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
+        displayBox = tk.Text(display_frame, state=tk.DISABLED)
+
+        self.redirector = StdRedirector(displayBox)
+
+        file_button.pack(side = 'top')
+        add_button.pack(side = 'top')
+        delete_button.pack(side = 'top')
+        back_button.pack(side = 'bottom')
+        displayBox.pack(side = 'bottom')
+
+        top_frame.pack()
+        mid_frame.pack()
+        bottom_frame.pack()
+        display_frame.pack()
+
+    def redirect(self):
+        self.redirector.clear()
+        sys.stdout = self.redirector
+        sys.stderr = self.redirector
+
+# this is the search frame - allows one text entry (may want to expand for add/delete)
 class EntryMenu(tk.Frame):
     def __init__(self, master=None, **kwargs):
         tk.Frame.__init__(self, master, **kwargs)

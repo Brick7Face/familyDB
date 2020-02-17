@@ -30,8 +30,8 @@ class FamilyDB:
             sql2 = "INSERT INTO Marriage (MarriageID, Partner1, Partner2, Date) VALUES (?, ?, ?, ?)"
             cursor.executemany(sql2, marriageRecords)
             print(cursor.rowcount, " records were inserted into table Marriage.")
-        except (ValueError):
-            print("ValueError: check the entries in your records file.")
+        except ValueError as error:
+            print("ValueError:", error)
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
@@ -134,15 +134,15 @@ class FamilyDB:
         # Aunts/uncles - select * from Person where ParentsMarriageID in (select parentsMarriageID from (select * from Person inner join Marriage on (PersonID=Partner1 or PersonID=Partner2)) where MarriageID = (select parentsMarriageID from Person where Name = \'" + person1 + "\'));
 
 
-    def choice(self, choice, filter, record):
+    def choice(self, choice, filter, entry):
         cur = self.cur
         mydb = self.mydb
 
         if choice=="Search":
-            self.searchDB(cur, filter, record)
+            self.searchDB(cur, filter, entry)
 
         if choice=="Family":
-            self.relate(cur, record)
+            self.relate(cur, entry)
 
         elif choice=="Populate":
             self.populate(cur)
