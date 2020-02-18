@@ -138,6 +138,10 @@ class FamilyDB:
         cur = self.cur
         mydb = self.mydb
 
+        entry = entry.strip()
+        if (entry == ""):
+            return
+
         if choice=="Search":
             self.searchDB(cur, filter, entry)
 
@@ -147,4 +151,3 @@ class FamilyDB:
         elif choice=="Populate":
             self.populate(cur)
             mydb.commit()
-            print("\n")
