@@ -34,7 +34,7 @@ class Main(tk.Tk):
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
         # add frame types to stack, creating 1 instance of each
-        for frame in (MainMenu, PopulateMenu, EntryMenu, FilterMenu):
+        for frame in (MainMenu, EntryMenu, FilterMenu):
             f = frame(self)
             f.grid(row=0, column=0, sticky='nsew')
             self.frames[frame] = f
@@ -93,7 +93,7 @@ class MainMenu(MenuFrame):
         # create widgets
         search_button = ttk.Button(self.mid_frame, text = 'Search', width = 20, command = lambda: master.switch(FilterMenu))
         family_button = ttk.Button(self.mid_frame, text = 'Family', width = 20, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
-        populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 20, command = lambda: master.switch(PopulateMenu))
+        populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 20, command = master.populate)
         quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 15, command = master.callback)
 
         # place the widgets
@@ -117,28 +117,6 @@ class FilterMenu(MenuFrame):
         dob_button.pack(side = 'top')
         birthplace_button.pack(side = 'top')
         deathplace_button.pack(side = 'top')
-        back_button.pack(side = 'bottom')
-
-# similar to above; directs populate functionality
-class PopulateMenu(MenuFrame):
-    # will add records to db from user input - need to delete this function and create another frame menu
-    def addRecord(self):
-        pass
-
-    def delRecord(self):
-        pass
-
-    def __init__(self, master=None, **kwargs):
-        MenuFrame.__init__(self, master, **kwargs)
-
-        file_button = ttk.Button(self.mid_frame, text = 'Read from records.py', width = 20, command = master.populate)
-        add_button = ttk.Button(self.mid_frame, text = 'Add record', width = 20, command = self.addRecord)
-        delete_button = ttk.Button(self.mid_frame, text = 'Delete record', width = 20, command = self.delRecord)
-        back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
-
-        file_button.pack(side = 'top')
-        add_button.pack(side = 'top')
-        delete_button.pack(side = 'top')
         back_button.pack(side = 'bottom')
 
 # this is the search frame - allows one text entry (may want to expand for add/delete)

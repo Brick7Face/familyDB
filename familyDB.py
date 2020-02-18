@@ -39,13 +39,13 @@ class FamilyDB:
             filter = "Name"
         query = ""
         if filter=="Name":
-            query = "SELECT * FROM Person WHERE Name LIKE ?"
+            query = "SELECT * FROM Person WHERE Name LIKE ? ORDER BY PersonID ASC"
         elif filter=="Birthday":
             query = "SELECT * FROM Person WHERE DOB LIKE ?"
         elif filter=="Birthplace":
-            query = "SELECT * FROM Person WHERE Birthplace LIKE ?"
+            query = "SELECT * FROM Person WHERE Birthplace LIKE ? ORDER BY DOB ASC"
         elif filter=="Deathplace":
-            query = "SELECT * FROM Person WHERE Deathplace LIKE ?"
+            query = "SELECT * FROM Person WHERE Deathplace LIKE ? ORDER BY DOD ASC"
         elif filter=="Return":
             return
 
@@ -139,15 +139,15 @@ class FamilyDB:
         mydb = self.mydb
 
         entry = entry.strip()
-        if (entry == ""):
-            return
 
         if choice=="Search":
+            if (entry==""):
+                return
             self.searchDB(cur, filter, entry)
-
-        if choice=="Family":
+        elif choice=="Family":
+            if (entry==""):
+                return
             self.relate(cur, entry)
-
         elif choice=="Populate":
             self.populate(cur)
             mydb.commit()
