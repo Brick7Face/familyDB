@@ -68,10 +68,10 @@ class MenuFrame(tk.Frame):
         self.bottom_frame = tk.Frame(self)
         display_frame = tk.Frame(self)
 
-        displayBox = tk.Text(display_frame, state=tk.DISABLED)
-        self.redirector = StdRedirector(displayBox)
+        display_box = tk.Text(display_frame, state=tk.DISABLED)
+        self.redirector = StdRedirector(display_box)
 
-        displayBox.pack(side = 'bottom')
+        display_box.pack(side = 'bottom')
 
         top_frame.pack()
         self.mid_frame.pack()
