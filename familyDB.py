@@ -39,18 +39,18 @@ class FamilyDB:
             filter = "Name"
         query = ""
         if filter=="Name":
-            query = "SELECT * FROM Person WHERE Name LIKE \'%" + record + "%\'"
+            query = "SELECT * FROM Person WHERE Name LIKE ?"
         elif filter=="Birthday":
-            query = "SELECT * FROM Person WHERE DOB = \'" + record + "\'"
+            query = "SELECT * FROM Person WHERE DOB LIKE ?"
         elif filter=="Birthplace":
-            query = "SELECT * FROM Person WHERE Birthplace LIKE \'%" + record + "%\'"
+            query = "SELECT * FROM Person WHERE Birthplace LIKE ?"
         elif filter=="Deathplace":
-            query = "SELECT * FROM Person WHERE Deathplace LIKE \'%" + record + "%\'"
+            query = "SELECT * FROM Person WHERE Deathplace LIKE ?"
         elif filter=="Return":
             return
 
         try:
-            cursor.execute(query)
+            cursor.execute(query, [ "%" + record + "%" ])
             result = cursor.fetchall()
             if len(result)==0:
                 print("No results.")
@@ -62,7 +62,7 @@ class FamilyDB:
 
     # Print the family of an inputted person by name
     def relate(self, cursor, person1):
-        cursor.execute("SELECT * FROM Person WHERE Name = \'" + person1 + "\'")
+        cursor.execute("SELECT * FROM Person WHERE Name = ?", [ person1 ])
         result = cursor.fetchall()
         if len(result)==0:
             print("That person does not exist in the database. Try again.")
@@ -74,7 +74,7 @@ class FamilyDB:
             (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID in \
                 (SELECT ParentsMarriageID from \
                     (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                        (SELECT ParentsMarriageID FROM Person where Name = \'" + person1 + "\'))")
+                        (SELECT ParentsMarriageID FROM Person where Name = ?))", [ person1 ])
         result = cursor.fetchall()
 
         for record in result:
@@ -85,7 +85,7 @@ class FamilyDB:
 
         cursor.execute("SELECT * FROM \
             (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                (SELECT ParentsMarriageID FROM Person where Name = \'" + person1 + "\')")
+                (SELECT ParentsMarriageID FROM Person where Name = ?)", [ person1 ])
         result = cursor.fetchall()
 
         for record in result:
@@ -94,14 +94,14 @@ class FamilyDB:
 
         print("\n====== SIBLINGS =====")
 
-        cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID IN ( \
-            SELECT MarriageID FROM Marriage WHERE Partner1 IN ( \
-                SELECT PersonID FROM ( \
-                    SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = ( \
-                        SELECT ParentsMarriageID FROM Person WHERE Name = \'" + person1 + "\')) OR Partner2 IN ( \
-                            SELECT PersonID FROM ( \
-                                SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = ( \
-                                    SELECT ParentsMarriageID FROM Person WHERE Name = \'" + person1 + "\'))) AND Name != \'" + person1 + "\'")
+        cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID IN \
+            (SELECT MarriageID FROM Marriage WHERE Partner1 IN \
+                (SELECT PersonID FROM \
+                    (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
+                        (SELECT ParentsMarriageID FROM Person WHERE Name = ?)) OR Partner2 IN \
+                            (SELECT PersonID FROM \
+                                (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
+                                    (SELECT ParentsMarriageID FROM Person WHERE Name = ?))) AND Name != ?", [ person1, person1, person1 ])
         result = cursor.fetchall()
 
         for record in result:
@@ -110,9 +110,9 @@ class FamilyDB:
 
         print("\n====== SPOUSE(S) =====")
 
-        cursor.execute("SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2) WHERE (Partner1=( \
-            SELECT PersonID FROM Person WHERE Name=\'" + person1 + "\') OR Partner2=( \
-                SELECT PersonID FROM Person WHERE Name=\'" + person1 + "\')) AND Name!=\'" + person1 + "\'")
+        cursor.execute("SELECT * FROM Person INNER JOIN Marriage ON (PersonID = Partner1 OR PersonID = Partner2) WHERE (Partner1 = \
+            (SELECT PersonID FROM Person WHERE Name = ?) OR Partner2 = \
+                (SELECT PersonID FROM Person WHERE Name = ?)) AND Name != ?", [ person1, person1, person1 ])
         result = cursor.fetchall()
 
         for record in result:
@@ -121,10 +121,10 @@ class FamilyDB:
 
         print("\n====== CHILDREN =====")
 
-        cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID in ( \
-            SELECT MarriageID FROM Marriage WHERE Partner1 = ( \
-                SELECT PersonID FROM Person WHERE Name = \'" + person1 + "\') OR Partner2 = ( \
-                    SELECT PersonID FROM Person WHERE Name = \'" + person1 + "\'))")
+        cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID in \
+            (SELECT MarriageID FROM Marriage WHERE Partner1 = \
+                (SELECT PersonID FROM Person WHERE Name = ?) OR Partner2 = \
+                    (SELECT PersonID FROM Person WHERE Name = ?))", [ person1, person1 ])
         result = cursor.fetchall()
 
         for record in result:

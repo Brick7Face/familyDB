@@ -21,7 +21,7 @@ class Person:
     # print a Person's profile
     def displayPerson(self):
         print("Record #", self.id, "\nName:", self.name, "\nBorn:", self.dob, "in", self.birthplace, "\nDied:", self.dod, self.deathplace, "(Age", str(self.age) + ")")
-        print("-----------") 
+        print("-----------")
 
     # calculate the age in years and return it as an int
     def calcAge(self, dob, dod):
@@ -38,7 +38,7 @@ class Person:
             age = int(ageDT.days / 365.25)
         else:
             dodStr = dod.split("-")
-            if (dobStr[0]=='0000' or dodStr[0]=='0000'):
+            if (dodStr[0]=='0000'):
                 return age
             if (dodStr[1]=='00'):
                 dodStr[1] = '01'
