@@ -65,8 +65,8 @@ class MenuFrame(tk.Frame):
     def updateDisplay(self, results):
         self.display_box.delete(*self.display_box.get_children())
         for data in results:
-            self.display_box.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
-            self.display_box.insert(data[0], 'end', 'substring')
+            self.display_box.insert('', 'end', 'parent', values=(data[0], data[1], data[2], data[3], data[4]))
+            #self.display_box.insert('parent', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
 
     def updateMessage(self, string, color):
         self.message_bar.config(text=string, fg=color)
@@ -125,7 +125,6 @@ class EntryMenu(MenuFrame):
         self.submit_button.pack(side = 'right')
         self.back_button.pack(side = 'bottom')
 
-    def createPersonDisplay(self):
         self.display_frame.config(height=200)
         scrollbary = ttk.Scrollbar(self.display_frame, orient='vertical')
         scrollbarx = ttk.Scrollbar(self.display_frame, orient='horizontal')
@@ -147,15 +146,12 @@ class EntryMenu(MenuFrame):
         self.display_box.column('#5', minwidth=0, width=50)
         self.display_box.pack(side = 'bottom')
 
-    def createFamilyDisplay(self):
-        pass
-
     # search db based on filters
     def search(self, filter):
         result = db.choice("Search", self.filter, self.entryW.get())
         if (result != None):
             self.updateDisplay(result)
-            self.updateMessage("".join([str(len(result)), " records found."]), "green")
+            self.updateMessage("".join([str(len(result)), " record(s) found."]), "green")
         else:
             self.updateMessage("No results.", "red")
 
@@ -163,7 +159,8 @@ class EntryMenu(MenuFrame):
     def family(self):
         result = db.choice("Family", "", self.entryW.get())
         if (result != None):
-            pass
+            self.updateDisplay(result)
+            self.updateMessage("".join([str(len(result)), " record(s) found."]), "green")
         else:
             self.updateMessage("That person was not found.", "red")
 
@@ -177,11 +174,9 @@ class EntryMenu(MenuFrame):
     def setFilter(self, filter):
         self.filter = filter
         if (self.filter==""):
-            self.createFamilyDisplay()
             self.submit_button.config(text = 'Submit', command = self.family)
             self.back_button.config(command = lambda: self.master.switch(MainMenu))
         else:
-            self.createPersonDisplay()
             self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter))
             self.back_button.config(command = lambda: self.master.switch(FilterMenu))
 

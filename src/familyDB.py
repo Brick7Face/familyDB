@@ -68,6 +68,7 @@ class FamilyDB:
         if len(result)==0:
             return
 
+        '''
         print("\n====== GRANDPARENTS =====")
 
         cursor.execute("SELECT * FROM \
@@ -119,6 +120,7 @@ class FamilyDB:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             person.displayPerson()
 
+        '''
         print("\n====== CHILDREN =====")
 
         cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID in \
@@ -127,9 +129,11 @@ class FamilyDB:
                     (SELECT PersonID FROM Person WHERE Name = ?))", [ person1, person1 ])
         result = cursor.fetchall()
 
+        personList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-            person.displayPerson()
+            personList.append(person.displayPerson())
+        return personList
 
         # Aunts/uncles - select * from Person where ParentsMarriageID in (select parentsMarriageID from (select * from Person inner join Marriage on (PersonID=Partner1 or PersonID=Partner2)) where MarriageID = (select parentsMarriageID from Person where Name = \'" + person1 + "\'));
 
@@ -147,7 +151,7 @@ class FamilyDB:
         elif choice=="Family":
             if (entry==""):
                 return
-            self.relate(cur, entry)
+            return self.relate(cur, entry)
         elif choice=="Populate":
             returnStr = self.populate(cur)
             mydb.commit()
