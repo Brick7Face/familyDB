@@ -66,6 +66,7 @@ class MenuFrame(tk.Frame):
         self.display_box.delete(*self.display_box.get_children())
         for data in results:
             self.display_box.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
+            self.display_box.insert(data[0], 'end', 'substring')
 
     def updateMessage(self, string, color):
         self.message_bar.config(text=string, fg=color)
