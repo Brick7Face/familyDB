@@ -23,15 +23,17 @@ class FamilyDB:
         cursor.execute("CREATE TABLE IF NOT EXISTS Marriage ( MarriageID INT, Partner1 INT, Partner2 INT, Date DATE, PRIMARY KEY (MarriageID), FOREIGN KEY(Partner1) REFERENCES Person(PersonID), FOREIGN KEY(Partner2) REFERENCES Person(PersonID) )")
 
         try:
+            returnList = []
             sql = "INSERT INTO Person (PersonID, Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?, ?)"
             cursor.executemany(sql, personRecords)
-            print(cursor.rowcount, " records were inserted into table Person.")
+            returnList.append("".join([str(cursor.rowcount), " records were inserted into table Person."]))
 
             sql2 = "INSERT INTO Marriage (MarriageID, Partner1, Partner2, Date) VALUES (?, ?, ?, ?)"
             cursor.executemany(sql2, marriageRecords)
-            print(cursor.rowcount, " records were inserted into table Marriage.")
+            returnList.append("".join([str(cursor.rowcount), " records were inserted into table Marriage."]))
+            return returnList
         except ValueError as error:
-            print("ValueError:", error)
+            return(["ValueError:", error])
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
@@ -49,23 +51,21 @@ class FamilyDB:
         elif filter=="Return":
             return
 
-        try:
-            cursor.execute(query, [ "%" + record + "%" ])
-            result = cursor.fetchall()
-            if len(result)==0:
-                print("No results.")
-            for record in result:
-                person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-                person.displayPerson()
-        except (ValueError):
-            print("ValueError: check the entries in your records file.")
+        cursor.execute(query, [ "%" + record + "%" ])
+        result = cursor.fetchall()
+        personList = []
+        if len(result)==0:
+            return
+        for record in result:
+            person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
+            personList.append(person.displayPerson())
+        return personList
 
     # Print the family of an inputted person by name
     def relate(self, cursor, person1):
         cursor.execute("SELECT * FROM Person WHERE Name = ?", [ person1 ])
         result = cursor.fetchall()
         if len(result)==0:
-            print("That person does not exist in the database. Try again.")
             return
 
         print("\n====== GRANDPARENTS =====")
@@ -143,11 +143,12 @@ class FamilyDB:
         if choice=="Search":
             if (entry==""):
                 return
-            self.searchDB(cur, filter, entry)
+            return self.searchDB(cur, filter, entry)
         elif choice=="Family":
             if (entry==""):
                 return
             self.relate(cur, entry)
         elif choice=="Populate":
-            self.populate(cur)
+            returnStr = self.populate(cur)
             mydb.commit()
+            return returnStr

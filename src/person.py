@@ -20,8 +20,9 @@ class Person:
 
     # print a Person's profile
     def displayPerson(self):
-        print("Record #", self.id, "\nName:", self.name, "\nBorn:", self.dob, "in", self.birthplace, "\nDied:", self.dod, self.deathplace, "(Age", str(self.age) + ")")
-        print("-----------")
+        #print("Record #", self.id, "\nName:", self.name, "\nBorn:", self.dob, "in", self.birthplace, "\nDied:", self.dod, self.deathplace, "(Age", str(self.age) + ")")
+        #print("-----------")
+        return [self.id, self.name, " ".join([self.dob, self.birthplace]), " ".join([self.dod, self.deathplace]), self.age]
 
     # calculate the age in years and return it as an int
     def calcAge(self, dob, dod):
