@@ -19,8 +19,8 @@ class FamilyDB:
         cursor.execute("DROP TABLE IF EXISTS Marriage")
         cursor.execute("DROP TABLE IF EXISTS Person")
         time.sleep(1)
-        cursor.execute("CREATE TABLE IF NOT EXISTS Person ( PersonID INT, Name TINYTEXT NOT NULL, ParentsMarriageID INT, DOB DATE, DOD DATE, Birthplace TINYTEXT, Deathplace TINYTEXT, PRIMARY KEY (PersonID), FOREIGN KEY(ParentsMarriageID) REFERENCES Marriage(MarriageID) )")
-        cursor.execute("CREATE TABLE IF NOT EXISTS Marriage ( MarriageID INT, Partner1 INT, Partner2 INT, Date DATE, PRIMARY KEY (MarriageID), FOREIGN KEY(Partner1) REFERENCES Person(PersonID), FOREIGN KEY(Partner2) REFERENCES Person(PersonID) )")
+        cursor.execute("CREATE TABLE IF NOT EXISTS Person ( PersonID INTEGER PRIMARY KEY AUTOINCREMENT, Name TINYTEXT NOT NULL, ParentsMarriageID INT, DOB DATE, DOD DATE, Birthplace TINYTEXT, Deathplace TINYTEXT, FOREIGN KEY(ParentsMarriageID) REFERENCES Marriage(MarriageID) )")
+        cursor.execute("CREATE TABLE IF NOT EXISTS Marriage ( MarriageID INTEGER PRIMARY KEY AUTOINCREMENT, Partner1 INT, Partner2 INT, Date DATE, FOREIGN KEY(Partner1) REFERENCES Person(PersonID), FOREIGN KEY(Partner2) REFERENCES Person(PersonID) )")
 
         try:
             returnList = []
@@ -76,12 +76,12 @@ class FamilyDB:
                     (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
                         (SELECT ParentsMarriageID FROM Person where Name = ?))", [ person1 ])
         result = cursor.fetchall()
-        
+
         grandparentsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             grandparentsList.append(person.displayPerson())
-        
+
         #print("\n====== PARENTS =====")
 
         cursor.execute("SELECT * FROM \
@@ -92,7 +92,7 @@ class FamilyDB:
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             parentsList.append(person.displayPerson())
-       
+
         #print("\n====== SIBLINGS =====")
 
         cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID IN \
@@ -104,12 +104,12 @@ class FamilyDB:
                                 (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
                                     (SELECT ParentsMarriageID FROM Person WHERE Name = ?))) AND Name != ?", [ person1, person1, person1 ])
         result = cursor.fetchall()
-        
+
         siblingsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             siblingsList.append(person.displayPerson())
-       
+
         '''
         print("\n====== SPOUSE(S) =====")
 
@@ -139,6 +139,24 @@ class FamilyDB:
 
         # Aunts/uncles - select * from Person where ParentsMarriageID in (select parentsMarriageID from (select * from Person inner join Marriage on (PersonID=Partner1 or PersonID=Partner2)) where MarriageID = (select parentsMarriageID from Person where Name = \'" + person1 + "\'));
 
+    def create(self, table, entry):
+        cursor = self.cur
+        mydb = self.mydb
+
+        if (table == "Person"):
+            cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = (SELECT PersonID FROM Person WHERE Name = ?) AND Partner2 = (SELECT PersonID FROM Person WHERE Name = ?)", [ entry[1], entry[2] ])
+            parentsID = cursor.fetchall()
+            if (len(parentsID) == 0):
+                parentsID = None
+            cursor.execute("INSERT INTO Person (Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?)", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6] ])
+            mydb.commit()
+        else:
+            cursor.execute("SELECT PersonID FROM Person WHERE Name = ?", entry[1])
+            parent1 = cursor.fetchall()
+            cursor.execute("SELECT PersonID FROM Person WHERE Name = ?", entry[2])
+            parent2 = cursor.fetchall()
+            cursor.execute("INSERT INTO Marriage (Partner1, Partner2, Date) VALUES (?, ?, ?)", [ parent1[0][0], parent2[0][0], entry[2] ])
+            mydb.commit()
 
     def choice(self, choice, filter, entry):
         cur = self.cur
