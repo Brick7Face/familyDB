@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from records import personRecords, marriageRecords
+from familyDBRecords.records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
@@ -68,8 +68,7 @@ class FamilyDB:
         if len(result)==0:
             return
 
-        '''
-        print("\n====== GRANDPARENTS =====")
+        #print("\n====== GRANDPARENTS =====")
 
         cursor.execute("SELECT * FROM \
             (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID in \
@@ -77,23 +76,24 @@ class FamilyDB:
                     (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
                         (SELECT ParentsMarriageID FROM Person where Name = ?))", [ person1 ])
         result = cursor.fetchall()
-
+        
+        grandparentsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-            person.displayPerson()
-
-        print("\n====== PARENTS =====")
+            grandparentsList.append(person.displayPerson())
+        
+        #print("\n====== PARENTS =====")
 
         cursor.execute("SELECT * FROM \
             (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
                 (SELECT ParentsMarriageID FROM Person where Name = ?)", [ person1 ])
         result = cursor.fetchall()
-
+        parentsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-            person.displayPerson()
-
-        print("\n====== SIBLINGS =====")
+            parentsList.append(person.displayPerson())
+       
+        #print("\n====== SIBLINGS =====")
 
         cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID IN \
             (SELECT MarriageID FROM Marriage WHERE Partner1 IN \
@@ -104,11 +104,13 @@ class FamilyDB:
                                 (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
                                     (SELECT ParentsMarriageID FROM Person WHERE Name = ?))) AND Name != ?", [ person1, person1, person1 ])
         result = cursor.fetchall()
-
+        
+        siblingsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-            person.displayPerson()
-
+            siblingsList.append(person.displayPerson())
+       
+        '''
         print("\n====== SPOUSE(S) =====")
 
         cursor.execute("SELECT * FROM Person INNER JOIN Marriage ON (PersonID = Partner1 OR PersonID = Partner2) WHERE (Partner1 = \
@@ -121,7 +123,7 @@ class FamilyDB:
             person.displayPerson()
 
         '''
-        print("\n====== CHILDREN =====")
+        #print("\n====== CHILDREN =====")
 
         cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID in \
             (SELECT MarriageID FROM Marriage WHERE Partner1 = \
@@ -129,11 +131,11 @@ class FamilyDB:
                     (SELECT PersonID FROM Person WHERE Name = ?))", [ person1, person1 ])
         result = cursor.fetchall()
 
-        personList = []
+        childList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-            personList.append(person.displayPerson())
-        return personList
+            childList.append(person.displayPerson())
+        return [grandparentsList, parentsList, siblingsList, childList]
 
         # Aunts/uncles - select * from Person where ParentsMarriageID in (select parentsMarriageID from (select * from Person inner join Marriage on (PersonID=Partner1 or PersonID=Partner2)) where MarriageID = (select parentsMarriageID from Person where Name = \'" + person1 + "\'));
 
