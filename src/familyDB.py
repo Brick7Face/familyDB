@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from familyDBRecords.records import personRecords, marriageRecords
+from records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
