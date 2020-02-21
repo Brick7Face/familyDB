@@ -10,6 +10,7 @@ class Main(tk.Tk):
 
         # set window attributes
         self.title("Family Viewer")
+        self.geometry("300x200")
 
         # create dict of frame elements, representing frame stack
         self.frames = {}
@@ -28,10 +29,16 @@ class Main(tk.Tk):
         if (frame==EntryMenu):
             f.setLabel(label)
             f.setFilter(filter)
+            f.updateDisplay("")
+            self.geometry("1300x350")
+        elif (frame==CreatePersonMenu):
+            self.geometry("1300x525")
+        elif (frame==CreateMarriageMenu):
+            self.geometry("1300x400")
+        else:
+            self.geometry("300x200")
         f.tkraise()
         f.updateMessage("", "black")
-        if (frame==EntryMenu):
-            f.updateDisplay("")
 
     # quit
     def callback(self):
@@ -53,7 +60,9 @@ class MenuFrame(tk.Frame):
         self.bottom_frame = tk.Frame(self)
         self.display_frame = tk.Frame(self)
 
+        self.top_bar = tk.Label(top_frame, text = '')
         self.message_bar = tk.Label(self.bottom_frame)
+        self.top_bar.pack(side = 'top')
         self.message_bar.pack(side = 'bottom')
 
         self.bottom_frame.pack(side = 'bottom')
@@ -97,7 +106,7 @@ class MainMenu(MenuFrame):
 
         # create widgets
         search_button = ttk.Button(self.mid_frame, text = 'Search', width = 15, command = lambda: master.switch(FilterMenu))
-        family_button = ttk.Button(self.mid_frame, text = 'Family', width = 15, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
+        family_button = ttk.Button(self.mid_frame, text = 'Find Family', width = 15, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
         populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 15, command = lambda: master.switch(PopulateMenu))
         quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 15, command = master.callback)
 
@@ -150,7 +159,7 @@ class CreateMenu(MenuFrame):
         self.display_box.heading('Born', text="Born", anchor='w')
         self.display_box.heading('Died', text="Died", anchor='w')
         self.display_box.heading('Age', text="Age", anchor='w')
-        self.display_box.column('#0', minwidth=0, width=20)
+        self.display_box.column('#0', minwidth=0, width=0)
         self.display_box.column('#1', minwidth=0, width=40)
         self.display_box.column('#2', minwidth=0, width=300)
         self.display_box.column('#3', minwidth=0, width=400)
@@ -162,6 +171,8 @@ class CreateMenu(MenuFrame):
 class CreatePersonMenu(CreateMenu):
     def __init__(self, master=None, **kwargs):
         CreateMenu.__init__(self, master, **kwargs)
+
+        self.top_bar.config(text = "Create person record", fg = "blue")
 
         name_frame = tk.Frame(self.mid_frame)
         parent1_frame = tk.Frame(self.mid_frame)
@@ -225,6 +236,8 @@ class CreateMarriageMenu(CreateMenu):
     def __init__(self, master=None, **kwargs):
         CreateMenu.__init__(self, master, **kwargs)
 
+        self.top_bar.config(text = "Create marriage record", fg = "blue")
+
         parent1_frame = tk.Frame(self.mid_frame)
         parent2_frame = tk.Frame(self.mid_frame)
         date_frame = tk.Frame(self.mid_frame)
@@ -263,10 +276,12 @@ class FilterMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
 
-        name_button = ttk.Button(self.mid_frame, text = 'Name', width = 15, command = lambda: master.switch(EntryMenu, "Enter name", "Name"))
-        dob_button = ttk.Button(self.mid_frame, text = 'Birthdate', width = 15, command = lambda: master.switch(EntryMenu, "Enter birthday YYYY-MM-DD", "Birthday"))
-        birthplace_button = ttk.Button(self.mid_frame, text = 'Birthplace', width = 15, command = lambda: master.switch(EntryMenu, "Enter birthplace", "Birthplace"))
-        deathplace_button = ttk.Button(self.mid_frame, text = 'Deathplace', width = 15, command = lambda: master.switch(EntryMenu, "Enter deathplace", "Deathplace"))
+        self.top_bar.config(text = "Filter search by:")
+
+        name_button = ttk.Button(self.mid_frame, text = 'Name', width = 15, command = lambda: master.switch(EntryMenu, "Enter name: ", "Name"))
+        dob_button = ttk.Button(self.mid_frame, text = 'Birthdate', width = 15, command = lambda: master.switch(EntryMenu, "Enter birthday (YYYY-MM-DD): ", "Birthday"))
+        birthplace_button = ttk.Button(self.mid_frame, text = 'Birthplace', width = 15, command = lambda: master.switch(EntryMenu, "Enter birthplace: ", "Birthplace"))
+        deathplace_button = ttk.Button(self.mid_frame, text = 'Deathplace', width = 15, command = lambda: master.switch(EntryMenu, "Enter deathplace: ", "Deathplace"))
         back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
 
         name_button.pack(side = 'top')
@@ -290,7 +305,7 @@ class EntryMenu(MenuFrame):
         self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15)
 
         self.labelW.pack(side = 'left')
-        self.entryW.pack(side = 'right')
+        self.entryW.pack(side = 'left')
         self.submit_button.pack(side = 'right')
         self.back_button.pack(side = 'bottom')
 
@@ -307,7 +322,7 @@ class EntryMenu(MenuFrame):
         self.display_box.heading('Born', text="Born", anchor='w')
         self.display_box.heading('Died', text="Died", anchor='w')
         self.display_box.heading('Age', text="Age", anchor='w')
-        self.display_box.column('#0', minwidth=0, width=20)
+        self.display_box.column('#0', minwidth=0, width=0)
         self.display_box.column('#1', minwidth=0, width=40)
         self.display_box.column('#2', minwidth=0, width=300)
         self.display_box.column('#3', minwidth=0, width=400)
@@ -351,12 +366,15 @@ class EntryMenu(MenuFrame):
     def setFilter(self, filter):
         self.filter = filter
         if (self.filter==""):
+            self.top_bar.config(text = "Search for family", fg ="blue")
             self.submit_button.config(text = 'Submit', command = self.family)
             self.back_button.config(command = lambda: self.master.switch(MainMenu))
         elif (self.filter=="Delete"):
+            self.top_bar.config(text = "Delete person", fg ="blue")
             self.submit_button.config(text = 'Submit', command = self.delete)
             self.back_button.config(command = lambda: self.master.switch(PopulateMenu))
         else:
+            self.top_bar.config(text = "Search for person by " + filter.lower(), fg = "blue")
             self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter))
             self.back_button.config(command = lambda: self.master.switch(FilterMenu))
 
