@@ -7,22 +7,25 @@ class Person:
         self.name = name
         self.parentsMarriageID = parentsMarriageID
         self.dob = dob
-        if (dod==None):
+        if (dod==None or dod=="None"):
             self.dod = "Alive"
         else:
             self.dod = dod
         self.birthplace = birthplace
-        if (deathplace==None):
+        if (deathplace==None or deathplace=="None"):
             self.deathplace = ""
         else:
             self.deathplace = deathplace
         self.age = self.calcAge(dob, dod)
 
-    # print a Person's profile
-    def displayPerson(self):
-        #print("Record #", self.id, "\nName:", self.name, "\nBorn:", self.dob, "in", self.birthplace, "\nDied:", self.dod, self.deathplace, "(Age", str(self.age) + ")")
-        #print("-----------")
+    # Return a string representing the person's information
+    def toString(self):
         return [self.id, self.name, " ".join([self.dob, self.birthplace]), " ".join([self.dod, self.deathplace]), self.age]
+
+    # Print information about the person, formatted for CLI output
+    def displayPerson(self):
+        print("Record #", self.id, "\nName:", self.name, "\nBorn:", self.dob, "in", self.birthplace, "\nDied:", self.dod, self.deathplace, "(Age", str(self.age) + ")")
+        print("-----------")
 
     # calculate the age in years and return it as an int
     def calcAge(self, dob, dod):

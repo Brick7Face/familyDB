@@ -9,7 +9,6 @@ class Main(tk.Tk):
         tk.Tk.__init__(self, **kwargs)
 
         # set window attributes
-        #self.geometry("500x400")
         self.title("Family Viewer")
 
         # create dict of frame elements, representing frame stack
@@ -41,7 +40,7 @@ class Main(tk.Tk):
     # populate .db file
     def populate(self):
         string = db.choice("Populate", "", "")
-        self.frames[MainMenu].updateMessage("\n".join([string[0], string[1]]), "green")
+        self.frames[PopulateMenu].updateMessage("\n".join([string[0], string[1]]), "green")
 
 # parent class for each type of frame
 class MenuFrame(tk.Frame):
@@ -62,7 +61,8 @@ class MenuFrame(tk.Frame):
         top_frame.pack(side = 'top')
         self.mid_frame.pack(side = 'top')
 
-    def updateDisplay(self, results, grandparents=None, parents=None, children=None):
+    # Update the display_box with records
+    def updateDisplay(self, results, grandparents=None, parents=None, spouse=None, children=None):
         self.display_box.delete(*self.display_box.get_children())
         if (grandparents != None and len(grandparents) > 0):
             self.display_box.insert('', 'end', values=('--', '----------', '----GRANDPARENTS----', '-----------', '--'))
@@ -76,11 +76,16 @@ class MenuFrame(tk.Frame):
                 self.display_box.insert('', 'end', values=('--', '----------', '----SIBLINGS----', '-----------', '--'))
         for data in results:
             self.display_box.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
+        if (spouse != None and len(spouse) > 0):
+            self.display_box.insert('', 'end', values=('--', '----------', '----SPOUSE(S)----', '----------', '--'))
+            for person in spouse:
+                self.display_box.insert('', 'end', values=(person[0], person[1], person[2], person[3], person[4]))
         if (children != None and len(children) > 0):
             self.display_box.insert('', 'end', values=('--', '----------', '----CHILDREN----', '----------', '--'))
             for child in children:
                 self.display_box.insert('', 'end', values=(child[0], child[1], child[2], child[3], child[4]))
 
+    # Update bottom message box with status info
     def updateMessage(self, string, color):
         self.message_bar.config(text=string, fg=color)
 
@@ -102,6 +107,7 @@ class MainMenu(MenuFrame):
         populate_button.pack(side = 'top')
         quit_button.pack(side = 'bottom')
 
+# menu for database manipulation
 class PopulateMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
@@ -113,13 +119,14 @@ class PopulateMenu(MenuFrame):
         options.add_command(label='Add Person', command = lambda: master.switch(CreatePersonMenu))
         options.add_command(label='Add Marriage', command = lambda: master.switch(CreateMarriageMenu))
         options.add_separator()
-        options.add_command(label='Delete Person', command = lambda: master.switch(MainMenu)) # edit
+        options.add_command(label='Delete Person', command = lambda: master.switch(EntryMenu, "Enter full name", "Delete"))
         back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
 
         file_button.pack(side = 'top')
         edit_button.pack(side = 'top')
         back_button.pack(side = 'bottom')
 
+# Parent class for creation menus, builds display_box
 class CreateMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
@@ -151,6 +158,7 @@ class CreateMenu(MenuFrame):
         self.display_box.column('#5', minwidth=0, width=50)
         self.display_box.pack(side = 'bottom')
 
+# menu frame for creating a Person record, with entries
 class CreatePersonMenu(CreateMenu):
     def __init__(self, master=None, **kwargs):
         CreateMenu.__init__(self, master, **kwargs)
@@ -204,10 +212,15 @@ class CreatePersonMenu(CreateMenu):
 
         self.submit_button.config(command = self.createPerson)
 
+    # fetch entries, build record in DB class
     def createPerson(self):
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
-        db.create("Person", personEntries)
+        result = db.create("Person", personEntries)
+        if (len(result) > 0):
+            self.updateDisplay(result)
+            self.updateMessage("Person created successfully.", "green")
 
+# menu frame for creating a Marriage record, with entries
 class CreateMarriageMenu(CreateMenu):
     def __init__(self, master=None, **kwargs):
         CreateMenu.__init__(self, master, **kwargs)
@@ -237,11 +250,15 @@ class CreateMarriageMenu(CreateMenu):
 
         self.submit_button.config(command = self.createMarriage)
 
+    # fetch entries, build record in DB class
     def createMarriage(self):
         marriageEntries = [ self.parent1_entry.get(), self.parent2_entry.get(), self.date_entry.get() ]
-        db.create("Marriage", marriageEntries)
+        result = db.create("Marriage", marriageEntries)
+        if (len(result) > 0):
+            self.updateDisplay(result)
+            self.updateMessage("Marriage created successfully.", "green")
 
-# similar to above frame, with different buttons
+# menu frame for picking search filter
 class FilterMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
@@ -311,10 +328,18 @@ class EntryMenu(MenuFrame):
     def family(self):
         family = db.choice("Family", "", self.entryW.get())
         if (family != None):
-            self.updateDisplay(family[2], family[0], family[1], family[3])
+            self.updateDisplay(family[2], family[0], family[1], family[3], family[4])
             self.updateMessage("".join([str(len(family[0]) + len(family[1]) + len(family[2]) + len(family[3])), " record(s) found."]), "green")
         else:
             self.updateMessage("That person was not found.", "red")
+
+    # delete a Person record
+    def delete(self):
+        success = db.delete(self.entryW.get())
+        if (success):
+            self.updateMessage("".join([self.entryW.get(), " was deleted successfully."]), "green")
+        else:
+            self.updateMessage("".join([self.entryW.get(), " was not found."]), "red")
 
     # update the label for the entry widget based on context
     def setLabel(self, label):
@@ -328,6 +353,9 @@ class EntryMenu(MenuFrame):
         if (self.filter==""):
             self.submit_button.config(text = 'Submit', command = self.family)
             self.back_button.config(command = lambda: self.master.switch(MainMenu))
+        elif (self.filter=="Delete"):
+            self.submit_button.config(text = 'Submit', command = self.delete)
+            self.back_button.config(command = lambda: self.master.switch(PopulateMenu))
         else:
             self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter))
             self.back_button.config(command = lambda: self.master.switch(FilterMenu))
