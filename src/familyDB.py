@@ -185,10 +185,11 @@ class FamilyDB:
         cursor.execute("SELECT * FROM Person WHERE Name = ?", [ name ])
         result = cursor.fetchall()
         if (len(result) > 0):
+            person = Person(result[0][0], result[0][1], result[0][2], result[0][3], result[0][4], result[0][5], result[0][6])
             cursor.execute("DELETE FROM Person WHERE Name = ?", [ name ])
-            return True
+            return [ person.toString() ]
         else:
-            return False
+            return []
 
     # Routes requests from GUI
     def choice(self, choice, filter, entry):
