@@ -140,8 +140,8 @@ class CreateMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
 
-        self.submit_button = ttk.Button(self.mid_frame, text = 'Submit')
-        self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(PopulateMenu))
+        self.submit_button = ttk.Button(self.mid_frame)
+        self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15)
 
         self.back_button.pack(side = 'bottom')
         self.submit_button.pack(side = 'bottom')
@@ -154,15 +154,29 @@ class CreateMenu(MenuFrame):
         scrollbary.pack(side='right', fill='y')
         scrollbarx.config(command=self.display_box.xview)
         scrollbarx.pack(side='bottom', fill='x')
-        self.display_box.heading('ID', text="ID", anchor='w')
-        self.display_box.heading('Name', text="Name", anchor='w')
-        self.display_box.heading('Born', text="Born", anchor='w')
-        self.display_box.heading('Died', text="Died", anchor='w')
-        self.display_box.heading('Age', text="Age", anchor='w')
+        headings = [ 'ID', 'Name', 'Born', 'Died', 'Age' ]
+        for i in range(5):
+            self.display_box.heading(headings[i], text=headings[i], anchor='w', command=lambda _col=headings[i]: self.sortColumn(self.display_box, _col, False))
         widths = [ 0, 40, 300, 400, 400, 50 ]
         for i in range(6):
             self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
         self.display_box.pack(side = 'bottom')
+
+    # When clicked on, a column will sort itself
+    def sortColumn(self, display_box, column, reverse):
+        rows = []
+        for row in display_box.get_children(''):
+            if (column == 'ID' or column == 'Age'):
+                # cast to integer for numbered columns
+                rows.append([int(display_box.set(row, column)), row])
+            else:
+                rows.append([display_box.set(row, column), row])
+        # Don't reverse order the first click
+        rows.sort(reverse=reverse)
+        for index, (val, row) in enumerate(rows):
+            display_box.move(row, '', index)
+        # Second time, reverse order
+        display_box.heading(column, command=lambda _col=column: self.sortColumn(display_box, _col, not reverse))
 
 # menu frame for creating a Person record, with entries
 class CreatePersonMenu(CreateMenu):
@@ -170,6 +184,8 @@ class CreatePersonMenu(CreateMenu):
         CreateMenu.__init__(self, master, **kwargs)
 
         self.top_bar.config(text = "Create person record", fg = "blue")
+        self.submit_button.config(text = 'Submit', command = self.createPerson)
+        self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
         name_frame = tk.Frame(self.mid_frame)
         parent1_frame = tk.Frame(self.mid_frame)
@@ -218,8 +234,6 @@ class CreatePersonMenu(CreateMenu):
         birthplace_frame.pack(side = 'top')
         deathplace_frame.pack(side = 'top')
 
-        self.submit_button.config(command = self.createPerson)
-
     # fetch entries, build record in DB class
     def createPerson(self):
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
@@ -234,6 +248,8 @@ class CreateMarriageMenu(CreateMenu):
         CreateMenu.__init__(self, master, **kwargs)
 
         self.top_bar.config(text = "Create marriage record", fg = "blue")
+        self.submit_button.config(text = 'Submit', command = self.createMarriage)
+        self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
         parent1_frame = tk.Frame(self.mid_frame)
         parent2_frame = tk.Frame(self.mid_frame)
@@ -257,8 +273,6 @@ class CreateMarriageMenu(CreateMenu):
         parent1_frame.pack(side = 'top')
         parent2_frame.pack(side = 'top')
         date_frame.pack(side = 'top')
-
-        self.submit_button.config(command = self.createMarriage)
 
     # fetch entries, build record in DB class
     def createMarriage(self):
@@ -288,9 +302,9 @@ class FilterMenu(MenuFrame):
         back_button.pack(side = 'bottom')
 
 # this is the search frame - allows one text entry (may want to expand for add/delete)
-class EntryMenu(MenuFrame):
+class EntryMenu(CreateMenu):
     def __init__(self, master=None, **kwargs):
-        MenuFrame.__init__(self, master, **kwargs)
+        CreateMenu.__init__(self, master, **kwargs)
 
         self.filter = ""
         self.master = master
@@ -298,31 +312,8 @@ class EntryMenu(MenuFrame):
         self.labelW = tk.Label(self.mid_frame)
         self.entryW = tk.Entry(self.mid_frame)
 
-        self.submit_button = ttk.Button(self.mid_frame)
-        self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15)
-
         self.labelW.pack(side = 'left')
         self.entryW.pack(side = 'left')
-        self.submit_button.pack(side = 'right')
-        self.back_button.pack(side = 'bottom')
-
-        self.display_frame.config(height=200)
-        scrollbary = ttk.Scrollbar(self.display_frame, orient='vertical')
-        scrollbarx = ttk.Scrollbar(self.display_frame, orient='horizontal')
-        self.display_box = ttk.Treeview(self.display_frame, columns=("ID", "Name", "Born", "Died", "Age"), selectmode="extended", yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
-        scrollbary.config(command=self.display_box.yview)
-        scrollbary.pack(side='right', fill='y')
-        scrollbarx.config(command=self.display_box.xview)
-        scrollbarx.pack(side='bottom', fill='x')
-        self.display_box.heading('ID', text="ID", anchor='w')
-        self.display_box.heading('Name', text="Name", anchor='w')
-        self.display_box.heading('Born', text="Born", anchor='w')
-        self.display_box.heading('Died', text="Died", anchor='w')
-        self.display_box.heading('Age', text="Age", anchor='w')
-        widths = [ 0, 40, 300, 400, 400, 50 ]
-        for i in range(6):
-            self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
-        self.display_box.pack(side = 'bottom')
 
     # search db based on filters
     def search(self, filter):
