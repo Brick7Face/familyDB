@@ -49,6 +49,14 @@ class Main(tk.Tk):
         string = db.choice("Populate", "", "")
         self.frames[PopulateMenu].updateMessage("\n".join([string[0], string[1]]), "green")
 
+class TreeFrame(tk.Tk):
+    def __init__(self, title, **kwargs):
+        tk.Tk.__init__(self, **kwargs)
+
+        self.title(title)
+
+        # Create canvas on which to place window
+
 # parent class for each type of frame
 class MenuFrame(tk.Frame):
     def __init__(self, master=None, **kwargs):
@@ -149,7 +157,7 @@ class CreateMenu(MenuFrame):
         self.display_frame.config(height=100)
         scrollbary = ttk.Scrollbar(self.display_frame, orient='vertical')
         scrollbarx = ttk.Scrollbar(self.display_frame, orient='horizontal')
-        self.display_box = ttk.Treeview(self.display_frame, columns=("ID", "Name", "Born", "Died", "Age"), selectmode="extended", yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.display_box = ttk.Treeview(self.display_frame, columns=("ID", "Name", "Born", "Died", "Age"), selectmode="browse", yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
         scrollbary.config(command=self.display_box.yview)
         scrollbary.pack(side='right', fill='y')
         scrollbarx.config(command=self.display_box.xview)
@@ -161,6 +169,17 @@ class CreateMenu(MenuFrame):
         for i in range(6):
             self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
         self.display_box.pack(side = 'bottom')
+
+        self.display_box.bind('<<TreeviewOpen>>', self.openRecord)
+
+    def openRecord(self, *args):
+        selection = self.display_box.selection()
+        vals = self.display_box.item(selection).get("values")
+        lf = tk.LabelFrame(TreeFrame(vals[1] + "\'s Family Tree"), text="Selected Person")
+        message = "Name:\t" + vals[1] + "\nBorn:\t" + vals[2] + "\nDied:\t" + vals[3] + "\nAge:\t" + str(vals[4])
+        lfc = tk.Label(lf, text=message, justify='left')
+        lf.pack()
+        lfc.pack()
 
     # When clicked on, a column will sort itself
     def sortColumn(self, display_box, column, reverse):
