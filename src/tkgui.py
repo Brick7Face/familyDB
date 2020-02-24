@@ -159,12 +159,9 @@ class CreateMenu(MenuFrame):
         self.display_box.heading('Born', text="Born", anchor='w')
         self.display_box.heading('Died', text="Died", anchor='w')
         self.display_box.heading('Age', text="Age", anchor='w')
-        self.display_box.column('#0', stretch=0, minwidth=0, width=0)
-        self.display_box.column('#1', stretch=0, minwidth=0, width=40)
-        self.display_box.column('#2', stretch=0, minwidth=0, width=300)
-        self.display_box.column('#3', stretch=0, minwidth=0, width=400)
-        self.display_box.column('#4', stretch=0, minwidth=0, width=400)
-        self.display_box.column('#5', stretch=0, minwidth=0, width=50)
+        widths = [ 0, 40, 300, 400, 400, 50 ]
+        for i in range(6):
+            self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
         self.display_box.pack(side = 'bottom')
 
 # menu frame for creating a Person record, with entries
@@ -322,12 +319,9 @@ class EntryMenu(MenuFrame):
         self.display_box.heading('Born', text="Born", anchor='w')
         self.display_box.heading('Died', text="Died", anchor='w')
         self.display_box.heading('Age', text="Age", anchor='w')
-        self.display_box.column('#0', stretch=0, minwidth=0, width=0)
-        self.display_box.column('#1', stretch=0, minwidth=0, width=40)
-        self.display_box.column('#2', stretch=0, minwidth=0, width=300)
-        self.display_box.column('#3', stretch=0, minwidth=0, width=400)
-        self.display_box.column('#4', stretch=0, minwidth=0, width=400)
-        self.display_box.column('#5', stretch=0, minwidth=0, width=50)
+        widths = [ 0, 40, 300, 400, 400, 50 ]
+        for i in range(6):
+            self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
         self.display_box.pack(side = 'bottom')
 
     # search db based on filters
@@ -350,8 +344,9 @@ class EntryMenu(MenuFrame):
 
     # delete a Person record
     def delete(self):
-        success = db.delete(self.entryW.get())
-        if (success):
+        result = db.delete(self.entryW.get())
+        if (len(result) > 0):
+            self.updateDisplay(result)
             self.updateMessage("".join([self.entryW.get(), " was deleted successfully."]), "green")
         else:
             self.updateMessage("".join([self.entryW.get(), " was not found."]), "red")
