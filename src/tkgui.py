@@ -50,12 +50,20 @@ class Main(tk.Tk):
         self.frames[PopulateMenu].updateMessage("\n".join([string[0], string[1]]), "green")
 
 class TreeFrame(tk.Tk):
-    def __init__(self, title, **kwargs):
+    def __init__(self, title, vals, **kwargs):
         tk.Tk.__init__(self, **kwargs)
 
         self.title(title)
 
         # Create canvas on which to place window
+        self.canvas = tk.Canvas(self)
+        lf = tk.LabelFrame(self, text=vals[1])
+        message = "Born:\t" + vals[2] + "\nDied:\t" + vals[3] + "\nAge:\t" + str(vals[4])
+        lfc = tk.Label(lf, text=message, justify='left')
+        lf.pack()
+        lfc.pack()
+        self.canvas.pack()
+
 
 # parent class for each type of frame
 class MenuFrame(tk.Frame):
@@ -175,11 +183,7 @@ class CreateMenu(MenuFrame):
     def openRecord(self, *args):
         selection = self.display_box.selection()
         vals = self.display_box.item(selection).get("values")
-        lf = tk.LabelFrame(TreeFrame(vals[1] + "\'s Family Tree"), text="Selected Person")
-        message = "Name:\t" + vals[1] + "\nBorn:\t" + vals[2] + "\nDied:\t" + vals[3] + "\nAge:\t" + str(vals[4])
-        lfc = tk.Label(lf, text=message, justify='left')
-        lf.pack()
-        lfc.pack()
+        TreeFrame(vals[1] + "\'s Family Tree", vals)
 
     # When clicked on, a column will sort itself
     def sortColumn(self, display_box, column, reverse):
