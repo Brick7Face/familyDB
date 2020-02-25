@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from records import personRecords, marriageRecords
+from familyDBRecords.records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
@@ -62,7 +62,10 @@ class FamilyDB:
         return personList
 
     # Send back family information for a person given Name
-    def relate(self, cursor, name):
+    def relate(self, name):
+        cursor = self.cur
+        mydb = self.mydb
+
         cursor.execute("SELECT * FROM Person WHERE Name = ?", [ name ])
         result = cursor.fetchall()
         if (len(result) == 0):
@@ -202,10 +205,6 @@ class FamilyDB:
             if (entry==""):
                 return
             return self.searchDB(cur, filter, entry)
-        elif choice=="Family":
-            if (entry==""):
-                return
-            return self.relate(cur, entry)
         elif choice=="Populate":
             returnStr = self.populate(cur)
             mydb.commit()

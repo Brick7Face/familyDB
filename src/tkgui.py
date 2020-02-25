@@ -54,15 +54,27 @@ class TreeFrame(tk.Tk):
         tk.Tk.__init__(self, **kwargs)
 
         self.title(title)
+        self.geometry("1000x500")
 
-        # Create canvas on which to place window
-        self.canvas = tk.Canvas(self)
+        canvas = tk.Canvas(self)
+        canvas.grid(row=0, column=0, sticky='nsew')
+
+        family = db.relate(vals[1])
+        for valpersonList in family:
+            rowFrame = tk.Frame(canvas)
+            if (len(personList) > 0):
+                for val,person in enumerate(personList):
+                    lf = tk.LabelFrame(rowFrame, text=person[1])
+                    message = "Born:\t" + person[2] + "\nDied:\t" + person[3] + "\nAge:\t" + str(person[4])
+                    lfc = tk.Label(lf, text=message, justify='left')
+                    lf.grid(row=)
+                    lfc.pack(side='left')
+            rowFrame.pack(side='top')
         lf = tk.LabelFrame(self, text=vals[1])
         message = "Born:\t" + vals[2] + "\nDied:\t" + vals[3] + "\nAge:\t" + str(vals[4])
         lfc = tk.Label(lf, text=message, justify='left')
         lf.pack()
         lfc.pack()
-        self.canvas.pack()
 
 
 # parent class for each type of frame
@@ -122,13 +134,11 @@ class MainMenu(MenuFrame):
 
         # create widgets
         search_button = ttk.Button(self.mid_frame, text = 'Search', width = 15, command = lambda: master.switch(FilterMenu))
-        family_button = ttk.Button(self.mid_frame, text = 'Find Family', width = 15, command = lambda: master.switch(EntryMenu, "Enter full name", ""))
         populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 15, command = lambda: master.switch(PopulateMenu))
         quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 15, command = master.callback)
 
         # place the widgets
         search_button.pack(side = 'top')
-        family_button.pack(side = 'top')
         populate_button.pack(side = 'top')
         quit_button.pack(side = 'bottom')
 
@@ -374,11 +384,7 @@ class EntryMenu(CreateMenu):
     # set the filter to send to the db search function
     def setFilter(self, filter):
         self.filter = filter
-        if (self.filter==""):
-            self.top_bar.config(text = "Search for family", fg ="blue")
-            self.submit_button.config(text = 'Submit', command = self.family)
-            self.back_button.config(command = lambda: self.master.switch(MainMenu))
-        elif (self.filter=="Delete"):
+        if (self.filter=="Delete"):
             self.top_bar.config(text = "Delete person", fg ="blue")
             self.submit_button.config(text = 'Submit', command = self.delete)
             self.back_button.config(command = lambda: self.master.switch(PopulateMenu))
