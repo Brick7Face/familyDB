@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 import sys
-import familyDB
+import familyDB, treeframe
 
 # main functionality controlled from here
 class Main(tk.Tk):
@@ -39,38 +39,6 @@ class Main(tk.Tk):
         string = db.choice("Populate", "", "")
         self.currentFrame.updateMessage("\n".join([string[0], string[1]]), "green")
 
-class TreeFrame(tk.Tk):
-    def __init__(self, title, vals, **kwargs):
-        tk.Tk.__init__(self, **kwargs)
-
-        self.title(title)
-        self.geometry("1000x500")
-
-        family = db.relate(vals[1])
-        for i, personList in enumerate(family[1:]):
-            lastCol = 0
-            if (len(personList) > 0):
-                for j, person in enumerate(personList):
-                    lf = tk.LabelFrame(self, text=person[1])
-                    message = "Born:\t" + person[2] + "\n>" + person[3] + "\nDied:\t" + person[4]
-                    if (person[5] != ""):
-                        message = message + "\n>" + person[5]
-                    message = message + "\nAge:\t" + str(person[6])
-                    lfc = tk.Label(lf, text=message, justify='left')
-                    lf.grid(row=i, column=j, sticky='nw')
-                    lfc.grid(row=i, column=j, sticky='nw')
-                    lastCol = j+1
-            if (i == 3):
-                person = family[:1][0][0]
-                lf = tk.LabelFrame(self, text=person[1])
-                message = "Born:\t" + person[2] + "\n>" + person[3] + "\nDied:\t" + person[4]
-                if (person[5] != ""):
-                    message = message + "\n>" + person[5]
-                message = message + "\nAge:\t" + str(person[6])
-                lfc = tk.Label(lf, text=message, justify='left')
-                lf.grid(row=i, column=lastCol, sticky='nw')
-                lfc.grid(row=i, column=lastCol, sticky='nw')
-
 
 # parent class for each type of frame
 class MenuFrame(tk.Frame):
@@ -80,6 +48,7 @@ class MenuFrame(tk.Frame):
         # create subframes
         top_frame = tk.Frame(self)
         self.mid_frame = tk.Frame(self)
+        self.submit_frame = tk.Frame(self)
         self.bottom_frame = tk.Frame(self)
         self.display_frame = tk.Frame(self)
 
@@ -90,8 +59,9 @@ class MenuFrame(tk.Frame):
 
         top_frame.grid(row=0, sticky='n')
         self.mid_frame.grid(row=1, sticky='n')
-        self.display_frame.grid(row=2, sticky='n')
-        self.bottom_frame.grid(row=3, sticky='s')
+        self.submit_frame.grid(row=2, sticky='n')
+        self.display_frame.grid(row=3, sticky='n')
+        self.bottom_frame.grid(row=4, sticky='s')
 
     # Update the display_box with records
     def updateDisplay(self, results):
@@ -143,10 +113,10 @@ class CreateMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
 
-        self.submit_button = ttk.Button(self.mid_frame)
+        self.submit_button = ttk.Button(self.submit_frame)
         self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15)
 
-        self.submit_button.grid(row=7, column=1, sticky='e')
+        self.submit_button.grid(sticky='n')
         self.back_button.grid(sticky='s')
 
         #self.display_frame.config(height=100)
@@ -170,7 +140,8 @@ class CreateMenu(MenuFrame):
     def openRecord(self, *args):
         selection = self.display_box.selection()
         vals = self.display_box.item(selection).get("values")
-        TreeFrame(vals[1] + "\'s Family Tree", vals)
+        family = db.relate(vals[1])
+        treeframe.TreeFrame(vals[1] + "\'s Family Tree", family)
 
     # When clicked on, a column will sort itself
     def sortColumn(self, display_box, column, reverse):
