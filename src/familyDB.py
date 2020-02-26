@@ -68,9 +68,11 @@ class FamilyDB:
 
         cursor.execute("SELECT * FROM Person WHERE Name = ?", [ name ])
         result = cursor.fetchall()
-        if (len(result) == 0):
-            return
-        return [ self.getGrandparents(cursor, name), self.getParents(cursor, name), self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
+        personList = []
+        for record in result:
+            person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
+            personList.append(person.toString())
+        return [ personList, self.getGrandparents(cursor, name), self.getParents(cursor, name), self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
 
     # Send back grandparents
     def getGrandparents(self, cursor, name):

@@ -56,25 +56,33 @@ class TreeFrame(tk.Tk):
         self.title(title)
         self.geometry("1000x500")
 
-        canvas = tk.Canvas(self)
-        canvas.grid(row=0, column=0, sticky='nsew')
-
         family = db.relate(vals[1])
-        for valpersonList in family:
-            rowFrame = tk.Frame(canvas)
+        for i, personList in enumerate(family[1:]):
+            #rowFrame = tk.Frame(self)
+            lastCol = 0
             if (len(personList) > 0):
-                for val,person in enumerate(personList):
-                    lf = tk.LabelFrame(rowFrame, text=person[1])
-                    message = "Born:\t" + person[2] + "\nDied:\t" + person[3] + "\nAge:\t" + str(person[4])
+                for j, person in enumerate(personList):
+                    lf = tk.LabelFrame(self, text=person[1])
+                    message = "Born:\t" + person[2] + "\n>" + person[3] + "\nDied:\t" + person[4]
+                    if (person[5] != ""):
+                        message = message + "\n>" + person[5]
+                    message = message + "\nAge:\t" + str(person[6])
                     lfc = tk.Label(lf, text=message, justify='left')
-                    lf.grid(row=)
-                    lfc.pack(side='left')
-            rowFrame.pack(side='top')
-        lf = tk.LabelFrame(self, text=vals[1])
-        message = "Born:\t" + vals[2] + "\nDied:\t" + vals[3] + "\nAge:\t" + str(vals[4])
-        lfc = tk.Label(lf, text=message, justify='left')
-        lf.pack()
-        lfc.pack()
+                    lf.grid(row=i, column=j, sticky='nw')
+                    lfc.grid(row=i, column=j, sticky='nw')
+                    lastCol = j+1
+            if (i == 3):
+                person = family[:1][0][0]
+                lf = tk.LabelFrame(self, text=person[1])
+                message = "Born:\t" + person[2] + "\n>" + person[3] + "\nDied:\t" + person[4]
+                if (person[5] != ""):
+                    message = message + "\n>" + person[5]
+                message = message + "\nAge:\t" + str(person[6])
+                lfc = tk.Label(lf, text=message, justify='left')
+                lf.grid(row=i, column=lastCol, sticky='nw')
+                lfc.grid(row=i, column=lastCol, sticky='nw')
+
+            #rowFrame.grid(row=i, sticky='nw')
 
 
 # parent class for each type of frame
@@ -99,28 +107,10 @@ class MenuFrame(tk.Frame):
         self.mid_frame.pack(side = 'top')
 
     # Update the display_box with records
-    def updateDisplay(self, results, grandparents=None, parents=None, spouse=None, children=None):
+    def updateDisplay(self, results):
         self.display_box.delete(*self.display_box.get_children())
-        if (grandparents != None and len(grandparents) > 0):
-            self.display_box.insert('', 'end', values=('--', '----------', '----GRANDPARENTS----', '-----------', '--'))
-            for parent in grandparents:
-                self.display_box.insert('', 'end', values=(parent[0], parent[1], parent[2], parent[3], parent[4]))
-        if (parents != None and len(parents) > 0):
-            self.display_box.insert('', 'end', values=('--', '----------', '----PARENTS----', '-----------', '--'))
-            for parent in parents:
-                self.display_box.insert('', 'end', values=(parent[0], parent[1], parent[2], parent[3], parent[4]))
-            if (len(results) > 0):
-                self.display_box.insert('', 'end', values=('--', '----------', '----SIBLINGS----', '-----------', '--'))
         for data in results:
-            self.display_box.insert('', 'end', values=(data[0], data[1], data[2], data[3], data[4]))
-        if (spouse != None and len(spouse) > 0):
-            self.display_box.insert('', 'end', values=('--', '----------', '----SPOUSE(S)----', '----------', '--'))
-            for person in spouse:
-                self.display_box.insert('', 'end', values=(person[0], person[1], person[2], person[3], person[4]))
-        if (children != None and len(children) > 0):
-            self.display_box.insert('', 'end', values=('--', '----------', '----CHILDREN----', '----------', '--'))
-            for child in children:
-                self.display_box.insert('', 'end', values=(child[0], child[1], child[2], child[3], child[4]))
+            self.display_box.insert('', 'end', values=(data[0], data[1], " ".join([data[2], data[3]]), " ".join([data[4], data[5]]), data[6]))
 
     # Update bottom message box with status info
     def updateMessage(self, string, color):
