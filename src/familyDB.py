@@ -110,7 +110,7 @@ class FamilyDB:
                         (SELECT ParentsMarriageID FROM Person WHERE Name = ?)) OR Partner2 IN \
                             (SELECT PersonID FROM \
                                 (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                                    (SELECT ParentsMarriageID FROM Person WHERE Name = ?))) AND Name != ?", [ name, name, name ])
+                                    (SELECT ParentsMarriageID FROM Person WHERE Name = ?)))", [ name, name ]) #AND Name != ?", [ name, name, name ])
         result = cursor.fetchall()
 
         siblingsList = []

@@ -8,30 +8,75 @@ class TreeFrame(tk.Tk):
 
         self.title(title)
 
-        display_frame = tk.Frame(self)
+        self.display_frame = tk.Frame(self)
+        self.display_frame.grid(sticky='news')
 
-        for i, personList in enumerate(family[1:]):
-            lastCol = 0
-            if (len(personList) > 0):
-                for j, person in enumerate(personList):
-                    lf = tk.LabelFrame(display_frame, text=person[1])
-                    message = "Born:\t" + person[2] + "\n>" + person[3] + "\nDied:\t" + person[4]
-                    if (person[5] != ""):
-                        message = message + "\n>" + person[5]
-                    message = message + "\nAge:\t" + str(person[6])
-                    lfc = tk.Label(lf, text=message, justify='left')
-                    lf.grid(row=i, column=j, sticky='nw')
-                    lfc.grid(row=i, column=j, sticky='nw')
-                    lastCol = j+1
-            if (i == 3):
-                person = family[:1][0][0]
-                lf = tk.LabelFrame(display_frame, text=person[1])
-                message = "Born:\t" + person[2] + "\n>" + person[3] + "\nDied:\t" + person[4]
-                if (person[5] != ""):
-                    message = message + "\n>" + person[5]
-                message = message + "\nAge:\t" + str(person[6])
-                lfc = tk.Label(lf, text=message, justify='left')
-                lf.grid(row=i, column=lastCol, sticky='nw')
-                lfc.grid(row=i, column=lastCol, sticky='nw')
+        self.createTree(family)
 
-        display_frame.grid()
+    def createTree(self, family):
+        selfRecord = family[:1][0][0]
+        grandparents = family[1]
+        parents = family[2]
+        siblings = family[3]
+        spouses = family[4]
+        children = family[5]
+
+        if (len(grandparents) > 0):
+            for i, person in enumerate(grandparents):
+                col = [ 12, 14, 16, 18 ]
+                frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
+                message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
+                text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
+                text_box.insert('end', message)
+                text_box.configure(state='disabled')
+                frame.grid(row=0, column=col[i])
+                text_box.grid(sticky='news')
+
+        if (len(parents) > 0):
+            for i, person in enumerate(parents):
+                col = [ 13, 17 ]
+                frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
+                message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
+                text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
+                text_box.insert('end', message)
+                text_box.configure(state='disabled')
+                frame.grid(row=1, column=col[i])
+                text_box.grid(sticky='news')
+
+        start = 15 - int((len(siblings) / 2))
+        offset = 0
+        parent_start = 0
+        if (len(siblings) == 0):
+            siblings.append(selfRecord)
+        for i, person in enumerate(siblings):
+            frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
+            message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
+            text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
+            text_box.insert('end', message)
+            text_box.configure(state='disabled')
+            frame.grid(row=2, column=start+offset+i)
+            text_box.grid(sticky='news')
+            if (person[1] == selfRecord[1]):
+                frame.configure(relief="solid")
+                parent_start = start+offset+i
+                for j, spouse in enumerate(spouses):
+                    offset = j+1
+                    frame2 = tk.LabelFrame(self.display_frame, text=spouse[1], font=("Helvetica", 10))
+                    frame2.configure(relief="solid")
+                    message2 = "Born: " + spouse[2] + "\nDied: " + spouse[4] + "\nAge: " + str(spouse[6])
+                    text_box2 = tk.Text(frame2, width=25, height=3, font=("Helvetica", 10))
+                    text_box2.insert('end', message2)
+                    text_box2.configure(state='disabled')
+                    frame2.grid(row=2, column=start+offset+i)
+                    text_box2.grid(sticky='news')
+
+        if (len(children) > 0):
+            start = parent_start - int((len(children) / 2))
+            for i, person in enumerate(children):
+                frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
+                message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
+                text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
+                text_box.insert('end', message)
+                text_box.configure(state='disabled')
+                frame.grid(row=3, column=start+i)
+                text_box.grid(sticky='news')
