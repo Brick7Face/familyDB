@@ -7,11 +7,28 @@ class TreeFrame(tk.Tk):
         tk.Tk.__init__(self, **kwargs)
 
         self.title(title)
+        self.columnconfigure(0, weight=1)
+        self.rowconfigure(0, weight=1)
 
-        self.display_frame = tk.Frame(self)
-        self.display_frame.grid(sticky='news')
+        self.canvas = tk.Canvas(self, width=1000)
+        scrollbary = tk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
+        scrollbarx = tk.Scrollbar(self, orient='horizontal', command=self.canvas.xview)
+        self.canvas.configure(yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
 
+        self.display_frame = tk.Frame(self.canvas)
         self.createTree(family)
+
+        self.canvas.create_window((0,0), window=self.display_frame, anchor='nw', state='disabled')
+
+        scrollbary.grid(row=0, column=1, sticky='nes')
+        scrollbarx.grid(row=1, column=0, sticky='sew')
+        self.canvas.grid(row=0, column=0, sticky='nswe')
+
+        self.display_frame.bind("<Configure>", self.onFrameConfigure)
+
+
+    def onFrameConfigure(self, event):
+        self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
     def createTree(self, family):
         selfRecord = family[:1][0][0]

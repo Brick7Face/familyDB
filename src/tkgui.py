@@ -121,12 +121,9 @@ class CreateMenu(MenuFrame):
 
         #self.display_frame.config(height=100)
         scrollbary = ttk.Scrollbar(self.display_frame, orient='vertical')
-        scrollbarx = ttk.Scrollbar(self.display_frame, orient='horizontal')
-        self.display_box = ttk.Treeview(self.display_frame, columns=("ID", "Name", "Born", "Died", "Age"), selectmode="browse", yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+        self.display_box = ttk.Treeview(self.display_frame, columns=("ID", "Name", "Born", "Died", "Age"), selectmode="browse", yscrollcommand=scrollbary.set)
         scrollbary.config(command=self.display_box.yview)
         scrollbary.grid(column=1, sticky='ns')
-        scrollbarx.config(command=self.display_box.xview)
-        scrollbarx.grid(row=1, sticky='ew')
         headings = [ 'ID', 'Name', 'Born', 'Died', 'Age' ]
         for i in range(5):
             self.display_box.heading(headings[i], text=headings[i], anchor='w', command=lambda _col=headings[i]: self.sortColumn(self.display_box, _col, False))
