@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from familyDBRecords.records import personRecords, marriageRecords
+from records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
@@ -72,22 +72,14 @@ class FamilyDB:
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             personList.append(person.toString())
-        return [ personList, self.getGrandparents(cursor, name), self.getParents(cursor, name), self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
-
-    # Send back grandparents
-    def getGrandparents(self, cursor, name):
-        cursor.execute("SELECT * FROM \
-            (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID in \
-                (SELECT ParentsMarriageID from \
-                    (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                        (SELECT ParentsMarriageID FROM Person where Name = ?))", [ name ])
-        result = cursor.fetchall()
-
+        parentsList = self.getParents(cursor, name)
         grandparentsList = []
-        for record in result:
-            person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
-            grandparentsList.append(person.toString())
-        return grandparentsList
+        for parent in parentsList:
+            if (len(parent) > 0):
+                gpa = self.getParents(cursor, parent[1])
+                for p in gpa:
+                    grandparentsList.append(p)
+        return [ personList, grandparentsList, parentsList, self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
 
     # Send back parents
     def getParents(self, cursor, name):
@@ -99,6 +91,9 @@ class FamilyDB:
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             parentsList.append(person.toString())
+        if (len(parentsList) < 2):
+            for i in range(2 - len(parentsList)):
+                parentsList.append([None, "Unknown", "Unknown", "Unknown", "Unknown", "Unknown", "Unknown"])
         return parentsList
 
     # Send back siblings

@@ -38,27 +38,25 @@ class TreeFrame(tk.Tk):
         spouses = family[4]
         children = family[5]
 
-        if (len(grandparents) > 0):
-            for i, person in enumerate(grandparents):
-                col = [ 12, 14, 16, 18 ]
-                frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
-                message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
-                text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
-                text_box.insert('end', message)
-                text_box.configure(state='disabled')
-                frame.grid(row=0, column=col[i])
-                text_box.grid(sticky='news')
+        for i, person in enumerate(grandparents):
+            col = [ 12, 14, 16, 18 ]
+            frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
+            message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
+            text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
+            text_box.insert('end', message)
+            text_box.configure(state='disabled')
+            frame.grid(row=0, column=col[i])
+            text_box.grid(sticky='news')
 
-        if (len(parents) > 0):
-            for i, person in enumerate(parents):
-                col = [ 13, 17 ]
-                frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
-                message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
-                text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
-                text_box.insert('end', message)
-                text_box.configure(state='disabled')
-                frame.grid(row=1, column=col[i])
-                text_box.grid(sticky='news')
+        for i, person in enumerate(parents):
+            col = [ 13, 17 ]
+            frame = tk.LabelFrame(self.display_frame, text=person[1], font=("Helvetica", 10))
+            message = "Born: " + person[2] + "\nDied: " + person[4] + "\nAge: " + str(person[6])
+            text_box = tk.Text(frame, width=25, height=3, font=("Helvetica", 10))
+            text_box.insert('end', message)
+            text_box.configure(state='disabled')
+            frame.grid(row=1, column=col[i])
+            text_box.grid(sticky='news')
 
         start = 15 - int((len(siblings) / 2))
         offset = 0
