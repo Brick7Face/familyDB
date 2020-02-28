@@ -20,7 +20,7 @@ class Person:
 
     # Return a string representing the person's information
     def toString(self):
-        return [self.id, self.name, " ".join([self.dob, self.birthplace]), " ".join([self.dod, self.deathplace]), self.age]
+        return [self.id, self.name, self.dob, self.birthplace, self.dod, self.deathplace, self.age]
 
     # Print information about the person, formatted for CLI output
     def displayPerson(self):

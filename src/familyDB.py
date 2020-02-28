@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from records import personRecords, marriageRecords
+from familyDBRecords.records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
@@ -62,12 +62,17 @@ class FamilyDB:
         return personList
 
     # Send back family information for a person given Name
-    def relate(self, cursor, name):
+    def relate(self, name):
+        cursor = self.cur
+        mydb = self.mydb
+
         cursor.execute("SELECT * FROM Person WHERE Name = ?", [ name ])
         result = cursor.fetchall()
-        if (len(result) == 0):
-            return
-        return [ self.getGrandparents(cursor, name), self.getParents(cursor, name), self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
+        personList = []
+        for record in result:
+            person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
+            personList.append(person.toString())
+        return [ personList, self.getGrandparents(cursor, name), self.getParents(cursor, name), self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
 
     # Send back grandparents
     def getGrandparents(self, cursor, name):
@@ -105,7 +110,7 @@ class FamilyDB:
                         (SELECT ParentsMarriageID FROM Person WHERE Name = ?)) OR Partner2 IN \
                             (SELECT PersonID FROM \
                                 (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                                    (SELECT ParentsMarriageID FROM Person WHERE Name = ?))) AND Name != ?", [ name, name, name ])
+                                    (SELECT ParentsMarriageID FROM Person WHERE Name = ?)))", [ name, name ]) #AND Name != ?", [ name, name, name ])
         result = cursor.fetchall()
 
         siblingsList = []
@@ -202,10 +207,6 @@ class FamilyDB:
             if (entry==""):
                 return
             return self.searchDB(cur, filter, entry)
-        elif choice=="Family":
-            if (entry==""):
-                return
-            return self.relate(cur, entry)
         elif choice=="Populate":
             returnStr = self.populate(cur)
             mydb.commit()
