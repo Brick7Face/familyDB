@@ -26,6 +26,8 @@ class TreeFrame(tk.Tk):
 
         self.display_frame.bind("<Configure>", self.onFrameConfigure)
 
+        back_button = ttk.Button(self, text='Return', width=15, command=self.destroy)
+        back_button.grid(row=3, column=0, sticky='s')
 
     def onFrameConfigure(self, event):
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
