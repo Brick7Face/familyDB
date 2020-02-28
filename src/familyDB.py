@@ -14,11 +14,13 @@ class FamilyDB:
         sqlDB = sqlite3.connect('family.db')
         return sqlDB
 
-    # Populate the database using the imported lists from records.py
-    def populate(self, cursor):
+    def clearDB(self, cursor):
         cursor.execute("DROP TABLE IF EXISTS Marriage")
         cursor.execute("DROP TABLE IF EXISTS Person")
         time.sleep(1)
+
+    # Populate the database using the imported lists from records.py
+    def populate(self, cursor):
         cursor.execute("CREATE TABLE IF NOT EXISTS Person ( PersonID INTEGER PRIMARY KEY AUTOINCREMENT, Name TINYTEXT NOT NULL, ParentsMarriageID INT, DOB DATE, DOD DATE, Birthplace TINYTEXT, Deathplace TINYTEXT, FOREIGN KEY(ParentsMarriageID) REFERENCES Marriage(MarriageID) ON DELETE CASCADE )")
         cursor.execute("CREATE TABLE IF NOT EXISTS Marriage ( MarriageID INTEGER PRIMARY KEY AUTOINCREMENT, Partner1 INT, Partner2 INT, Date DATE, FOREIGN KEY(Partner1) REFERENCES Person(PersonID) ON DELETE SET NULL, FOREIGN KEY(Partner2) REFERENCES Person(PersonID) ON DELETE SET NULL )")
 
@@ -31,9 +33,12 @@ class FamilyDB:
             sql2 = "INSERT INTO Marriage (MarriageID, Partner1, Partner2, Date) VALUES (?, ?, ?, ?)"
             cursor.executemany(sql2, marriageRecords)
             returnList.append("".join([str(cursor.rowcount), " records were inserted into table Marriage."]))
+            returnList.append("green")
             return returnList
         except ValueError as error:
-            return(["ValueError:", error])
+            return(["ValueError:", str(error), "red"])
+        except sqlite3.IntegrityError as error2:
+            return(["IntegrityError:", "Records already exist.", "red"])
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
@@ -141,7 +146,6 @@ class FamilyDB:
             childList.append(person.toString())
         return childList
 
-        # Aunts/uncles - select * from Person where ParentsMarriageID in (select parentsMarriageID from (select * from Person inner join Marriage on (PersonID=Partner1 or PersonID=Partner2)) where MarriageID = (select parentsMarriageID from Person where Name = \'" + person1 + "\'));
 
     # Create a record in either Person or Marriage
     def create(self, table, entry):
@@ -206,3 +210,6 @@ class FamilyDB:
             returnStr = self.populate(cur)
             mydb.commit()
             return returnStr
+        elif choice=="ClearDB":
+            self.clearDB(cur)
+            mydb.commit()

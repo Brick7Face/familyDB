@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from tkinter import messagebox
 import sys
 import familyDB, treeframe
 
@@ -37,7 +38,13 @@ class Main(tk.Tk):
     # populate .db file
     def populate(self):
         string = db.choice("Populate", "", "")
-        self.currentFrame.updateMessage("\n".join([string[0], string[1]]), "green")
+        self.currentFrame.updateMessage("\n".join([string[0], string[1]]), string[2])
+
+    def clearDB(self):
+        ans = messagebox.askokcancel("Confirm Delete", "Are you sure you want to purge the database?")
+        if ans:
+            db.choice("ClearDB", "", "")
+            self.currentFrame.updateMessage("All records deleted.", "blue")
 
 
 # parent class for each type of frame
@@ -94,8 +101,9 @@ class PopulateMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
 
-        file_button = ttk.Button(self.mid_frame, text = 'Add Included Records', command = master.populate)
+        file_button = ttk.Button(self.mid_frame, text = 'Add Included Records', width=15, command = master.populate)
         edit_button = ttk.Menubutton(self.mid_frame, text = 'Add/Delete Record')
+        delete_button = ttk.Button(self.mid_frame, text = 'Delete All Records', width=15, command = master.clearDB)
         options = tk.Menu(edit_button)
         edit_button.config(menu=options)
         options.add_command(label='Add Person', command = lambda: master.switch(CreatePersonMenu))
@@ -106,6 +114,7 @@ class PopulateMenu(MenuFrame):
 
         file_button.grid(sticky='n')
         edit_button.grid(sticky='n')
+        delete_button.grid(sticky='n')
         back_button.grid()
 
 # Parent class for creation menus, builds display_box
@@ -175,11 +184,17 @@ class CreatePersonMenu(CreateMenu):
 
         self.name_entry = tk.Entry(self.mid_frame)
         self.parent1_entry = tk.Entry(self.mid_frame)
+        self.parent1_entry.insert(0, "None")
         self.parent2_entry = tk.Entry(self.mid_frame)
+        self.parent2_entry.insert(0, "None")
         self.dob_entry = tk.Entry(self.mid_frame, width = 9)
+        self.dob_entry.insert(0, "0000-00-00")
         self.dod_entry = tk.Entry(self.mid_frame, width = 9)
+        self.dod_entry.insert(0, "0000-00-00")
         self.birthplace_entry = tk.Entry(self.mid_frame)
+        self.birthplace_entry.insert(0, "Unknown")
         self.deathplace_entry = tk.Entry(self.mid_frame)
+        self.deathplace_entry.insert(0, "Unknown")
 
         name_label.grid(row=0, column=0, sticky='w')
         self.name_entry.grid(row=0, column=1, sticky='e')
@@ -198,6 +213,9 @@ class CreatePersonMenu(CreateMenu):
 
     # fetch entries, build record in DB class
     def createPerson(self):
+        if (self.name_entry.get().strip() == ""):
+            self.updateMessage("Name cannot be empty.", "red")
+            return
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
         result = db.create("Person", personEntries)
         if (len(result) > 0):
