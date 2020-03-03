@@ -109,7 +109,7 @@ class PopulateMenu(MenuFrame):
         options.add_command(label='Add Person', command = lambda: master.switch(CreatePersonMenu))
         options.add_command(label='Add Marriage', command = lambda: master.switch(CreateMarriageMenu))
         options.add_separator()
-        options.add_command(label='Delete Person', command = lambda: master.switch(EntryMenu, "Enter full name", "Delete"))
+        options.add_command(label='Delete Person', command = lambda: master.switch(EntryMenu, "Enter name", "Delete"))
         back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
 
         file_button.grid(sticky='n')
@@ -123,9 +123,11 @@ class CreateMenu(MenuFrame):
         MenuFrame.__init__(self, master, **kwargs)
 
         self.submit_button = ttk.Button(self.submit_frame)
+        self.option_button = ttk.Button(self.submit_frame, state='disabled')
         self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15)
 
-        self.submit_button.grid(sticky='n')
+        self.submit_button.grid(row=0, column=0, sticky='n')
+        self.option_button.grid(row=0, column=1, sticky='n')
         self.back_button.grid(sticky='s')
 
         #self.display_frame.config(height=100)
@@ -141,13 +143,18 @@ class CreateMenu(MenuFrame):
             self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
         self.display_box.grid(row=0)
 
+        # might want to move this
         self.display_box.bind('<<TreeviewOpen>>', self.openRecord)
+        self.display_box.bind('<<TreeviewSelect>>', self.enableOptions)
 
     def openRecord(self, *args):
         selection = self.display_box.selection()
         vals = self.display_box.item(selection).get("values")
         family = db.relate(vals[1])
         treeframe.TreeFrame(vals[1] + "\'s Family Tree", family)
+
+    def enableOptions(self, *args):
+        self.option_button.config(state='enabled')
 
     # When clicked on, a column will sort itself
     def sortColumn(self, display_box, column, reverse):
@@ -289,28 +296,23 @@ class EntryMenu(CreateMenu):
 
     # search db based on filters
     def search(self, filter):
-        result = db.choice("Search", self.filter, self.entryW.get())
+        self.option_button.config(state='disabled')
+        result = db.choice("Search", filter, self.entryW.get())
         if (result != None):
             self.updateDisplay(result)
             self.updateMessage("".join([str(len(result)), " record(s) found."]), "green")
         else:
+            self.updateDisplay([])
             self.updateMessage("No results.", "red")
-
-    # display famlily of a person
-    def family(self):
-        family = db.choice("Family", "", self.entryW.get())
-        if (family != None):
-            self.updateDisplay(family[2], family[0], family[1], family[3], family[4])
-            self.updateMessage("".join([str(len(family[0]) + len(family[1]) + len(family[2]) + len(family[3])), " record(s) found."]), "green")
-        else:
-            self.updateMessage("That person was not found.", "red")
 
     # delete a Person record
     def delete(self):
-        result = db.delete(self.entryW.get())
+        selection = self.display_box.selection()
+        vals = self.display_box.item(selection).get("values")
+        result = db.delete(vals[1])
         if (len(result) > 0):
             self.updateDisplay(result)
-            self.updateMessage("".join([self.entryW.get(), " was deleted successfully."]), "green")
+            self.updateMessage("".join([vals[1], " was deleted successfully."]), "green")
         else:
             self.updateMessage("".join([self.entryW.get(), " was not found."]), "red")
 
@@ -325,12 +327,23 @@ class EntryMenu(CreateMenu):
         self.filter = filter
         if (self.filter=="Delete"):
             self.top_bar.config(text = "Delete person", fg ="blue")
-            self.submit_button.config(text = 'Submit', command = self.delete)
+            self.submit_button.config(text = 'Search', command = lambda: self.search("Name"))
             self.back_button.config(command = lambda: self.master.switch(PopulateMenu))
+            self.option_button.config(text = "Delete", command = self.delete)
         else:
             self.top_bar.config(text = "Search for person by " + filter.lower(), fg = "blue")
             self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter))
             self.back_button.config(command = lambda: self.master.switch(FilterMenu))
+
+            self.option_button.destroy()
+            self.option_button = ttk.Menubutton(self.submit_frame, text = 'Options', state='disabled')
+            options = tk.Menu(self.option_button)
+            self.option_button.config(menu=options)
+            options.add_command(label='View Family Tree', command = self.openRecord)
+            options.add_command(label='Edit Record', state='disabled')
+            options.add_separator()
+            options.add_command(label='Delete Record', state='disabled')
+            self.option_button.grid(row=0, column=1, sticky='n')
 
 # main script - create a db object, start gui
 db = familyDB.FamilyDB()
