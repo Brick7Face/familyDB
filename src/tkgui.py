@@ -21,7 +21,7 @@ class Main(tk.Tk):
         self.currentFrame = f
 
     # change the frame in main view
-    def switch(self, frame, label="", filter=""):
+    def switch(self, frame, label="", filter="", id_num=""):
         self.currentFrame.destroy()
         f = frame(self)
         self.currentFrame = f
@@ -31,7 +31,7 @@ class Main(tk.Tk):
             f.setFilter(filter)
             f.updateDisplay("")
         elif (frame == EditPersonMenu):
-            f.updateDefaults(label)
+            f.updateDefaults(id_num, label, filter)
 
     # quit
     def callback(self):
@@ -263,12 +263,12 @@ class EditPersonMenu(CreatePersonMenu):
         CreatePersonMenu.__init__(self, master, **kwargs)
 
         self.option_button.config(text = 'Update', state='enabled', command = self.updatePerson)
-        self.back_button.config(command = lambda: master.switch(FilterMenu))
-
         self.id_num = None
 
-    def updateDefaults(self, id_num):
+    def updateDefaults(self, id_num, label, filter):
         self.top_bar.config(text = "Edit record", fg = "blue")
+        self.back_button.config(command = lambda: self.master.switch(EntryMenu, label, filter))
+
         record = db.relate(id_num)
 
         self.id_num = record[0][0][0]
@@ -372,6 +372,7 @@ class EntryMenu(DisplayMenu):
         DisplayMenu.__init__(self, master, **kwargs)
 
         self.filter = ""
+        self.label = ""
         self.master = master
 
         self.labelW = tk.Label(self.mid_frame)
@@ -396,8 +397,9 @@ class EntryMenu(DisplayMenu):
 
     # update the label for the entry widget based on context
     def setLabel(self, label):
+        self.label = label
         self.entryW.delete('0', tk.END)
-        self.labelW.config(text = label)
+        self.labelW.config(text = self.label)
         self.labelW.update()
 
     # set the filter to send to the db search function
@@ -418,7 +420,7 @@ class EntryMenu(DisplayMenu):
             options = tk.Menu(self.option_button)
             self.option_button.config(menu=options)
             options.add_command(label='View Family Tree', command = self.openRecord)
-            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.display_box.item(self.display_box.selection()).get("values")[0]))
+            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.label, self.filter, self.display_box.item(self.display_box.selection()).get("values")[0]))
             options.add_separator()
             options.add_command(label='Delete Record', command = self.delete)
             self.option_button.grid(row=0, column=1, sticky='n')
