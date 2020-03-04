@@ -73,7 +73,13 @@ class MenuFrame(tk.Frame):
     # Update the display_box with records
     def updateDisplay(self, results):
         self.display_box.delete(*self.display_box.get_children())
-        for data in results:
+        filtered = []
+        for record in results:
+            if (record not in filtered):
+                filtered.append(record)
+        if (len(filtered) > 0):
+            self.updateMessage("".join([str(len(filtered)), " record(s) found."]), "green")
+        for data in filtered:
             self.display_box.insert('', 'end', values=(data[0], data[1], " ".join([data[2], data[3]]), " ".join([data[4], data[5]]), data[6]))
 
     # Update bottom message box with status info
@@ -150,7 +156,18 @@ class DisplayMenu(MenuFrame):
         result = db.choice("Search", filter, record)
         if (result != None):
             self.updateDisplay(result)
-            self.updateMessage("".join([str(len(result)), " record(s) found."]), "green")
+        else:
+            self.updateDisplay([])
+            self.updateMessage("No results.", "red")
+
+    def searchMultiple(self, names):
+        results = []
+        for name in names:
+            result = db.choice("Search", "Name", name)
+            if (result != None):
+                results = results + result
+        if (len(results) > 0):
+            self.updateDisplay(results)
         else:
             self.updateDisplay([])
             self.updateMessage("No results.", "red")
@@ -226,7 +243,7 @@ class CreatePersonMenu(DisplayMenu):
         deathplace_label.grid(row=6, column=0, sticky='w')
         self.deathplace_entry.grid(row=6, column=1, sticky='e')
 
-        self.submit_button.config(text = 'Search', command = lambda: self.search("Name", self.name_entry.get()))
+        self.submit_button.config(text = 'Search', command = lambda: self.searchMultiple([ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get() ]))
 
     # fetch entries, build record in DB class
     def createPerson(self):
@@ -255,6 +272,7 @@ class CreateMarriageMenu(DisplayMenu):
         self.parent1_entry = tk.Entry(self.mid_frame)
         self.parent2_entry = tk.Entry(self.mid_frame)
         self.date_entry = tk.Entry(self.mid_frame, width = 9)
+        self.date_entry.insert(0, "0000-00-00")
 
         parent1_label.grid(row=0, column=0, sticky='w')
         self.parent1_entry.grid(row=0, column=1, sticky='e')
@@ -263,10 +281,16 @@ class CreateMarriageMenu(DisplayMenu):
         date_label.grid(row=2, column=0, sticky='w')
         self.date_entry.grid(row=2, column=1, sticky='e')
 
-        self.submit_button.config(text = 'Search', state='disabled')
+        self.submit_button.config(text = 'Search', command = lambda: self.searchMultiple([ self.parent1_entry.get(), self.parent2_entry.get() ]))
 
     # fetch entries, build record in DB class
     def createMarriage(self):
+        if (self.parent1_entry.get().strip() == ""):
+            self.updateMessage("Father cannot be empty.", "red")
+            return
+        if (self.parent2_entry.get().strip() == ""):
+            self.updateMessage("Mother cannot be empty.", "red")
+            return
         marriageEntries = [ self.parent1_entry.get(), self.parent2_entry.get(), self.date_entry.get() ]
         result = db.create("Marriage", marriageEntries)
         if (len(result) > 0):
