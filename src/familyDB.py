@@ -181,6 +181,26 @@ class FamilyDB:
                 returnList.append(person.toString())
             return returnList
 
+    def update(self, entry):
+        cursor = self.cur
+        mydb = self.mydb
+
+        for i, attr in enumerate(entry):
+            if (attr == "None"):
+                entry[i] = None
+
+        cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = (SELECT PersonID FROM Person WHERE Name = ?) AND Partner2 = (SELECT PersonID FROM Person WHERE Name = ?)", [ entry[1], entry[2] ])
+        parentsID = cursor.fetchall()
+        if (len(parentsID) == 0):
+            cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], None, entry[3], entry[4], entry[5], entry[6], entry[7] ])
+        else:
+            cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6], entry[7] ])
+        mydb.commit()
+        cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[0] ])
+        record = cursor.fetchall()
+        person = Person(record[0][0], record[0][1], record[0][2], record[0][3], record[0][4], record[0][5], record[0][6])
+        return [ person.toString() ]
+
     # Delete a Person record; will cascade to marriage if necessary
     def delete(self, name):
         cursor = self.cur
