@@ -95,9 +95,9 @@ class MainMenu(MenuFrame):
         MenuFrame.__init__(self, master, **kwargs)
 
         # create widgets
-        search_button = ttk.Button(self.mid_frame, text = 'Search', width = 15, command = lambda: master.switch(FilterMenu))
-        populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 15, command = lambda: master.switch(PopulateMenu))
-        quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 15, command = master.callback)
+        search_button = ttk.Button(self.mid_frame, text = 'Search', width = 20, command = lambda: master.switch(FilterMenu))
+        populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 20, command = lambda: master.switch(PopulateMenu))
+        quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 20, command = master.callback)
 
         # place the widgets
         search_button.grid()
@@ -109,16 +109,16 @@ class PopulateMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
 
-        file_button = ttk.Button(self.mid_frame, text = 'Add Included Records', width=15, command = master.populate)
+        file_button = ttk.Button(self.mid_frame, text = 'Add Included Records', width = 20, command = master.populate)
         edit_button = ttk.Menubutton(self.mid_frame, text = 'Add/Delete Record')
-        delete_button = ttk.Button(self.mid_frame, text = 'Delete All Records', width=15, command = master.clearDB)
+        delete_button = ttk.Button(self.mid_frame, text = 'Delete All Records', width = 20, command = master.clearDB)
         options = tk.Menu(edit_button)
         edit_button.config(menu=options)
         options.add_command(label='Add Person', command = lambda: master.switch(CreatePersonMenu))
         options.add_command(label='Add Marriage', command = lambda: master.switch(CreateMarriageMenu))
         options.add_separator()
         options.add_command(label='Delete Person', command = lambda: master.switch(EntryMenu, "Enter name", "Delete"))
-        back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
+        back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 20, command = lambda: master.switch(MainMenu))
 
         file_button.grid(sticky='n')
         edit_button.grid(sticky='n')
@@ -132,7 +132,7 @@ class DisplayMenu(MenuFrame):
 
         self.submit_button = ttk.Button(self.submit_frame)
         self.option_button = ttk.Button(self.submit_frame, state='disabled')
-        self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15)
+        self.back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 20)
 
         self.submit_button.grid(row=0, column=0, sticky='n')
         self.option_button.grid(row=0, column=1, sticky='n')
@@ -180,7 +180,7 @@ class DisplayMenu(MenuFrame):
     def openRecord(self, *args):
         selection = self.display_box.selection()
         vals = self.display_box.item(selection).get("values")
-        family = db.relate(vals[1])
+        family = db.relate(vals[0])
         treeframe.TreeFrame(vals[1] + "\'s Family Tree", family)
 
     # When clicked on, a column will sort itself
@@ -267,13 +267,13 @@ class EditPersonMenu(CreatePersonMenu):
 
         self.id_num = None
 
-    def updateDefaults(self, name):
-        self.top_bar.config(text = "Edit record " + name, fg = "blue")
-        record = db.relate(name)
+    def updateDefaults(self, id_num):
+        self.top_bar.config(text = "Edit record", fg = "blue")
+        record = db.relate(id_num)
 
         self.id_num = record[0][0][0]
 
-        self.name_entry.insert(0, name)
+        self.name_entry.insert(0, record[0][0][1])
         self.parent1_entry.delete(0, 'end')
         if (record[2][1][1] == 'Unknown'):
             record[2][1][1] = 'None'
@@ -354,11 +354,11 @@ class FilterMenu(MenuFrame):
 
         self.top_bar.config(text = "Filter search by:")
 
-        name_button = ttk.Button(self.mid_frame, text = 'Name', width = 15, command = lambda: master.switch(EntryMenu, "Enter name: ", "Name"))
-        dob_button = ttk.Button(self.mid_frame, text = 'Birthdate', width = 15, command = lambda: master.switch(EntryMenu, "Enter birthday (YYYY-MM-DD): ", "Birthday"))
-        birthplace_button = ttk.Button(self.mid_frame, text = 'Birthplace', width = 15, command = lambda: master.switch(EntryMenu, "Enter birthplace: ", "Birthplace"))
-        deathplace_button = ttk.Button(self.mid_frame, text = 'Deathplace', width = 15, command = lambda: master.switch(EntryMenu, "Enter deathplace: ", "Deathplace"))
-        back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 15, command = lambda: master.switch(MainMenu))
+        name_button = ttk.Button(self.mid_frame, text = 'Name', width = 20, command = lambda: master.switch(EntryMenu, "Enter name: ", "Name"))
+        dob_button = ttk.Button(self.mid_frame, text = 'Birthdate', width = 20, command = lambda: master.switch(EntryMenu, "Enter birthday (YYYY-MM-DD): ", "Birthday"))
+        birthplace_button = ttk.Button(self.mid_frame, text = 'Birthplace', width = 20, command = lambda: master.switch(EntryMenu, "Enter birthplace: ", "Birthplace"))
+        deathplace_button = ttk.Button(self.mid_frame, text = 'Deathplace', width = 20, command = lambda: master.switch(EntryMenu, "Enter deathplace: ", "Deathplace"))
+        back_button = ttk.Button(self.bottom_frame, text = 'Return', width = 20, command = lambda: master.switch(MainMenu))
 
         name_button.grid()
         dob_button.grid()
@@ -386,7 +386,7 @@ class EntryMenu(DisplayMenu):
         vals = self.display_box.item(selection).get("values")
         ans = messagebox.askokcancel("Confirm Delete", "Are you sure you want to delete " + vals[1] + "?")
         if ans:
-            result = db.delete(vals[1])
+            result = db.delete(vals[0])
             if (len(result) > 0):
                 self.display_box.delete(self.display_box.selection())
                 self.updateMessage("".join([vals[1], " was deleted successfully."]), "green")
@@ -418,7 +418,7 @@ class EntryMenu(DisplayMenu):
             options = tk.Menu(self.option_button)
             self.option_button.config(menu=options)
             options.add_command(label='View Family Tree', command = self.openRecord)
-            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.display_box.item(self.display_box.selection()).get("values")[1]))
+            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.display_box.item(self.display_box.selection()).get("values")[0]))
             options.add_separator()
             options.add_command(label='Delete Record', command = self.delete)
             self.option_button.grid(row=0, column=1, sticky='n')

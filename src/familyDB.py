@@ -67,30 +67,30 @@ class FamilyDB:
         return personList
 
     # Send back family information for a person given Name
-    def relate(self, name):
+    def relate(self, id_num):
         cursor = self.cur
         mydb = self.mydb
 
-        cursor.execute("SELECT * FROM Person WHERE Name = ?", [ name ])
+        cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ id_num ])
         result = cursor.fetchall()
         personList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
             personList.append(person.toString())
-        parentsList = self.getParents(cursor, name)
+        parentsList = self.getParents(cursor, id_num)
         grandparentsList = []
         for parent in parentsList:
             if (len(parent) > 0):
-                gpa = self.getParents(cursor, parent[1])
+                gpa = self.getParents(cursor, parent[0])
                 for p in gpa:
                     grandparentsList.append(p)
-        return [ personList, grandparentsList, parentsList, self.getSiblings(cursor, name), self.getSpouse(cursor, name), self.getChildren(cursor, name) ]
+        return [ personList, grandparentsList, parentsList, self.getSiblings(cursor, id_num), self.getSpouse(cursor, id_num), self.getChildren(cursor, id_num) ]
 
     # Send back parents
-    def getParents(self, cursor, name):
+    def getParents(self, cursor, id_num):
         cursor.execute("SELECT * FROM \
             (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                (SELECT ParentsMarriageID FROM Person where Name = ?)", [ name ])
+                (SELECT ParentsMarriageID FROM Person where PersonID = ?)", [ id_num ])
         result = cursor.fetchall()
         parentsList = []
         for record in result:
@@ -102,15 +102,15 @@ class FamilyDB:
         return parentsList
 
     # Send back siblings
-    def getSiblings(self, cursor, name):
+    def getSiblings(self, cursor, id_num):
         cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID IN \
             (SELECT MarriageID FROM Marriage WHERE Partner1 IN \
                 (SELECT PersonID FROM \
                     (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                        (SELECT ParentsMarriageID FROM Person WHERE Name = ?)) OR Partner2 IN \
+                        (SELECT ParentsMarriageID FROM Person WHERE PersonID = ?)) OR Partner2 IN \
                             (SELECT PersonID FROM \
                                 (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
-                                    (SELECT ParentsMarriageID FROM Person WHERE Name = ?)))", [ name, name ]) #AND Name != ?", [ name, name, name ])
+                                    (SELECT ParentsMarriageID FROM Person WHERE PersonID = ?)))", [ id_num, id_num ]) #AND PersonID != ?", [ id_num, id_num, id_num ])
         result = cursor.fetchall()
 
         siblingsList = []
@@ -120,10 +120,10 @@ class FamilyDB:
         return siblingsList
 
     # Send back spouse(s)
-    def getSpouse(self, cursor, name):
+    def getSpouse(self, cursor, id_num):
         cursor.execute("SELECT * FROM Person INNER JOIN Marriage ON (PersonID = Partner1 OR PersonID = Partner2) WHERE (Partner1 = \
-            (SELECT PersonID FROM Person WHERE Name = ?) OR Partner2 = \
-                (SELECT PersonID FROM Person WHERE Name = ?)) AND Name != ?", [ name, name, name ])
+            (SELECT PersonID FROM Person WHERE PersonID = ?) OR Partner2 = \
+                (SELECT PersonID FROM Person WHERE PersonID = ?)) AND PersonID != ?", [ id_num, id_num, id_num ])
         result = cursor.fetchall()
 
         spouseList = []
@@ -133,11 +133,11 @@ class FamilyDB:
         return spouseList
 
     # Send back children
-    def getChildren(self, cursor, name):
+    def getChildren(self, cursor, id_num):
         cursor.execute("SELECT * FROM Person WHERE ParentsMarriageID in \
             (SELECT MarriageID FROM Marriage WHERE Partner1 = \
-                (SELECT PersonID FROM Person WHERE Name = ?) OR Partner2 = \
-                    (SELECT PersonID FROM Person WHERE Name = ?))", [ name, name ])
+                (SELECT PersonID FROM Person WHERE PersonID = ?) OR Partner2 = \
+                    (SELECT PersonID FROM Person WHERE PersonID = ?))", [ id_num, id_num ])
         result = cursor.fetchall()
 
         childList = []
@@ -164,7 +164,7 @@ class FamilyDB:
             else:
                 cursor.execute("INSERT INTO Person (Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?)", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6] ])
             mydb.commit()
-            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[0] ])
+            cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ cursor.lastrowid ])
             record = cursor.fetchall()
             person = Person(record[0][0], record[0][1], record[0][2], record[0][3], record[0][4], record[0][5], record[0][6])
             return [ person.toString() ]
@@ -196,21 +196,21 @@ class FamilyDB:
         else:
             cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6], entry[7] ])
         mydb.commit()
-        cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[0] ])
+        cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ entry[7] ])
         record = cursor.fetchall()
         person = Person(record[0][0], record[0][1], record[0][2], record[0][3], record[0][4], record[0][5], record[0][6])
         return [ person.toString() ]
 
     # Delete a Person record; will cascade to marriage if necessary
-    def delete(self, name):
+    def delete(self, id_num):
         cursor = self.cur
         mydb = self.mydb
 
-        cursor.execute("SELECT * FROM Person WHERE Name = ?", [ name ])
+        cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ id_num ])
         result = cursor.fetchall()
         if (len(result) > 0):
             person = Person(result[0][0], result[0][1], result[0][2], result[0][3], result[0][4], result[0][5], result[0][6])
-            cursor.execute("DELETE FROM Person WHERE Name = ?", [ name ])
+            cursor.execute("DELETE FROM Person WHERE PersonID = ?", [ id_num ])
             mydb.commit()
             return [ person.toString() ]
         else:
