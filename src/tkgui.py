@@ -26,10 +26,12 @@ class Main(tk.Tk):
         f = frame(self)
         self.currentFrame = f
         f.grid(row=0, column=0, sticky='n')
-        if (frame==EntryMenu):
+        if (frame == EntryMenu):
             f.setLabel(label)
             f.setFilter(filter)
             f.updateDisplay("")
+        elif (frame == EditPersonMenu):
+            f.updateDefaults(label)
 
     # quit
     def callback(self):
@@ -256,6 +258,54 @@ class CreatePersonMenu(DisplayMenu):
             self.updateDisplay(result)
             self.updateMessage("Person created successfully.", "green")
 
+class EditPersonMenu(CreatePersonMenu):
+    def __init__(self, master=None, **kwargs):
+        CreatePersonMenu.__init__(self, master, **kwargs)
+
+        self.option_button.config(text = 'Update', state='enabled', command = self.updatePerson)
+        self.back_button.config(command = lambda: master.switch(FilterMenu))
+
+        self.id_num = None
+
+    def updateDefaults(self, name):
+        self.top_bar.config(text = "Edit record " + name, fg = "blue")
+        record = db.relate(name)
+
+        self.id_num = record[0][0][0]
+
+        self.name_entry.insert(0, name)
+        self.parent1_entry.delete(0, 'end')
+        if (record[2][1][1] == 'Unknown'):
+            record[2][1][1] = 'None'
+        self.parent1_entry.insert(0, record[2][1][1])
+        self.parent2_entry.delete(0, 'end')
+        if (record[2][0][1] == 'Unknown'):
+            record[2][0][1] = 'None'
+        self.parent2_entry.insert(0, record[2][0][1])
+        self.dob_entry.delete(0, 'end')
+        self.dob_entry.insert(0, record[0][0][2])
+        self.dod_entry.delete(0, 'end')
+        if (record[0][0][4] == 'Alive'):
+            record[0][0][4] = 'None'
+        self.dod_entry.insert(0, record[0][0][4])
+        self.birthplace_entry.delete(0, 'end')
+        self.birthplace_entry.insert(0, record[0][0][3])
+        self.deathplace_entry.delete(0, 'end')
+        if (record[0][0][5] == ''):
+            record[0][0][5] = 'None'
+        self.deathplace_entry.insert(0, record[0][0][5])
+
+    def updatePerson(self):
+        if (self.name_entry.get().strip() == ""):
+            self.updateMessage("Name cannot be empty.", "red")
+            return
+        personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get(), self.id_num ]
+        result = db.update(personEntries)
+        if (len(result) > 0):
+            self.updateDisplay(result)
+            self.updateMessage(" ".join([self.name_entry.get(), "updated successfully."]), "green")
+
+
 # menu frame for creating a Marriage record, with entries
 class CreateMarriageMenu(DisplayMenu):
     def __init__(self, master=None, **kwargs):
@@ -368,7 +418,7 @@ class EntryMenu(DisplayMenu):
             options = tk.Menu(self.option_button)
             self.option_button.config(menu=options)
             options.add_command(label='View Family Tree', command = self.openRecord)
-            options.add_command(label='Edit Record', state='disabled')
+            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.display_box.item(self.display_box.selection()).get("values")[1]))
             options.add_separator()
             options.add_command(label='Delete Record', command = self.delete)
             self.option_button.grid(row=0, column=1, sticky='n')
