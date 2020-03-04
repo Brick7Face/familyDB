@@ -38,7 +38,7 @@ class FamilyDB:
         except ValueError as error:
             return(["ValueError:", str(error), "red"])
         except sqlite3.IntegrityError as error2:
-            return(["IntegrityError:", "Some records already exist.", "orange"])
+            return(["Warning:", "Some records already exist.", "orange"])
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
@@ -169,9 +169,9 @@ class FamilyDB:
             person = Person(record[0][0], record[0][1], record[0][2], record[0][3], record[0][4], record[0][5], record[0][6])
             return [ person.toString() ]
         else:
-            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[1] ])
+            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[0] ])
             parent1 = cursor.fetchall()
-            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[2] ])
+            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[1] ])
             parent2 = cursor.fetchall()
             cursor.execute("INSERT INTO Marriage (Partner1, Partner2, Date) VALUES (?, ?, ?)", [ parent1[0][0], parent2[0][0], entry[2] ])
             mydb.commit()

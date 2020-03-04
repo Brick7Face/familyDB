@@ -73,7 +73,13 @@ class MenuFrame(tk.Frame):
     # Update the display_box with records
     def updateDisplay(self, results):
         self.display_box.delete(*self.display_box.get_children())
-        for data in results:
+        filtered = []
+        for record in results:
+            if (record not in filtered):
+                filtered.append(record)
+        if (len(filtered) > 0):
+            self.updateMessage("".join([str(len(filtered)), " record(s) found."]), "green")
+        for data in filtered:
             self.display_box.insert('', 'end', values=(data[0], data[1], " ".join([data[2], data[3]]), " ".join([data[4], data[5]]), data[6]))
 
     # Update bottom message box with status info
@@ -118,7 +124,7 @@ class PopulateMenu(MenuFrame):
         back_button.grid()
 
 # Parent class for creation menus, builds display_box
-class CreateMenu(MenuFrame):
+class DisplayMenu(MenuFrame):
     def __init__(self, master=None, **kwargs):
         MenuFrame.__init__(self, master, **kwargs)
 
@@ -143,18 +149,37 @@ class CreateMenu(MenuFrame):
             self.display_box.column('#' + str(i), stretch=0, minwidth=0, width=widths[i])
         self.display_box.grid(row=0)
 
-        # might want to move this
-        self.display_box.bind('<<TreeviewOpen>>', self.openRecord)
         self.display_box.bind('<<TreeviewSelect>>', self.enableOptions)
+        self.display_box.bind('<<TreeviewOpen>>', self.openRecord)
+
+    def search(self, filter, record):
+        result = db.choice("Search", filter, record)
+        if (result != None):
+            self.updateDisplay(result)
+        else:
+            self.updateDisplay([])
+            self.updateMessage("No results.", "red")
+
+    def searchMultiple(self, names):
+        results = []
+        for name in names:
+            result = db.choice("Search", "Name", name)
+            if (result != None):
+                results = results + result
+        if (len(results) > 0):
+            self.updateDisplay(results)
+        else:
+            self.updateDisplay([])
+            self.updateMessage("No results.", "red")
+
+    def enableOptions(self, *args):
+        self.option_button.config(state='enabled')
 
     def openRecord(self, *args):
         selection = self.display_box.selection()
         vals = self.display_box.item(selection).get("values")
         family = db.relate(vals[1])
         treeframe.TreeFrame(vals[1] + "\'s Family Tree", family)
-
-    def enableOptions(self, *args):
-        self.option_button.config(state='enabled')
 
     # When clicked on, a column will sort itself
     def sortColumn(self, display_box, column, reverse):
@@ -173,12 +198,12 @@ class CreateMenu(MenuFrame):
         display_box.heading(column, command=lambda _col=column: self.sortColumn(display_box, _col, not reverse))
 
 # menu frame for creating a Person record, with entries
-class CreatePersonMenu(CreateMenu):
+class CreatePersonMenu(DisplayMenu):
     def __init__(self, master=None, **kwargs):
-        CreateMenu.__init__(self, master, **kwargs)
+        DisplayMenu.__init__(self, master, **kwargs)
 
         self.top_bar.config(text = "Create person record", fg = "blue")
-        self.submit_button.config(text = 'Submit', command = self.createPerson)
+        self.option_button.config(text = 'Create', state='enabled', command = self.createPerson)
         self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
         name_label = tk.Label(self.mid_frame, text = "Enter name")
@@ -218,6 +243,8 @@ class CreatePersonMenu(CreateMenu):
         deathplace_label.grid(row=6, column=0, sticky='w')
         self.deathplace_entry.grid(row=6, column=1, sticky='e')
 
+        self.submit_button.config(text = 'Search', command = lambda: self.searchMultiple([ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get() ]))
+
     # fetch entries, build record in DB class
     def createPerson(self):
         if (self.name_entry.get().strip() == ""):
@@ -230,12 +257,12 @@ class CreatePersonMenu(CreateMenu):
             self.updateMessage("Person created successfully.", "green")
 
 # menu frame for creating a Marriage record, with entries
-class CreateMarriageMenu(CreateMenu):
+class CreateMarriageMenu(DisplayMenu):
     def __init__(self, master=None, **kwargs):
-        CreateMenu.__init__(self, master, **kwargs)
+        DisplayMenu.__init__(self, master, **kwargs)
 
         self.top_bar.config(text = "Create marriage record", fg = "blue")
-        self.submit_button.config(text = 'Submit', command = self.createMarriage)
+        self.option_button.config(text = 'Create', state='enabled', command = self.createMarriage)
         self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
         parent1_label = tk.Label(self.mid_frame, text = "Enter father")
@@ -245,6 +272,7 @@ class CreateMarriageMenu(CreateMenu):
         self.parent1_entry = tk.Entry(self.mid_frame)
         self.parent2_entry = tk.Entry(self.mid_frame)
         self.date_entry = tk.Entry(self.mid_frame, width = 9)
+        self.date_entry.insert(0, "0000-00-00")
 
         parent1_label.grid(row=0, column=0, sticky='w')
         self.parent1_entry.grid(row=0, column=1, sticky='e')
@@ -253,8 +281,16 @@ class CreateMarriageMenu(CreateMenu):
         date_label.grid(row=2, column=0, sticky='w')
         self.date_entry.grid(row=2, column=1, sticky='e')
 
+        self.submit_button.config(text = 'Search', command = lambda: self.searchMultiple([ self.parent1_entry.get(), self.parent2_entry.get() ]))
+
     # fetch entries, build record in DB class
     def createMarriage(self):
+        if (self.parent1_entry.get().strip() == ""):
+            self.updateMessage("Father cannot be empty.", "red")
+            return
+        if (self.parent2_entry.get().strip() == ""):
+            self.updateMessage("Mother cannot be empty.", "red")
+            return
         marriageEntries = [ self.parent1_entry.get(), self.parent2_entry.get(), self.date_entry.get() ]
         result = db.create("Marriage", marriageEntries)
         if (len(result) > 0):
@@ -281,9 +317,9 @@ class FilterMenu(MenuFrame):
         back_button.grid()
 
 # this is the search frame - allows one text entry (may want to expand for add/delete)
-class EntryMenu(CreateMenu):
+class EntryMenu(DisplayMenu):
     def __init__(self, master=None, **kwargs):
-        CreateMenu.__init__(self, master, **kwargs)
+        DisplayMenu.__init__(self, master, **kwargs)
 
         self.filter = ""
         self.master = master
@@ -294,27 +330,19 @@ class EntryMenu(CreateMenu):
         self.labelW.grid(row=0, column=0, sticky='w')
         self.entryW.grid(row=0, column=1, sticky='e')
 
-    # search db based on filters
-    def search(self, filter):
-        self.option_button.config(state='disabled')
-        result = db.choice("Search", filter, self.entryW.get())
-        if (result != None):
-            self.updateDisplay(result)
-            self.updateMessage("".join([str(len(result)), " record(s) found."]), "green")
-        else:
-            self.updateDisplay([])
-            self.updateMessage("No results.", "red")
-
     # delete a Person record
     def delete(self):
         selection = self.display_box.selection()
         vals = self.display_box.item(selection).get("values")
-        result = db.delete(vals[1])
-        if (len(result) > 0):
-            self.updateDisplay(result)
-            self.updateMessage("".join([vals[1], " was deleted successfully."]), "green")
-        else:
-            self.updateMessage("".join([self.entryW.get(), " was not found."]), "red")
+        ans = messagebox.askokcancel("Confirm Delete", "Are you sure you want to delete " + vals[1] + "?")
+        if ans:
+            result = db.delete(vals[1])
+            if (len(result) > 0):
+                self.display_box.delete(self.display_box.selection())
+                self.updateMessage("".join([vals[1], " was deleted successfully."]), "green")
+                self.option_button.config(state='disabled')
+            else:
+                self.updateMessage("".join([vals[1], " was not found."]), "red")
 
     # update the label for the entry widget based on context
     def setLabel(self, label):
@@ -327,12 +355,12 @@ class EntryMenu(CreateMenu):
         self.filter = filter
         if (self.filter=="Delete"):
             self.top_bar.config(text = "Delete person", fg ="blue")
-            self.submit_button.config(text = 'Search', command = lambda: self.search("Name"))
+            self.submit_button.config(text = 'Search', command = lambda: self.search("Name", self.entryW.get()))
             self.back_button.config(command = lambda: self.master.switch(PopulateMenu))
             self.option_button.config(text = "Delete", command = self.delete)
         else:
             self.top_bar.config(text = "Search for person by " + filter.lower(), fg = "blue")
-            self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter))
+            self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter, self.entryW.get()))
             self.back_button.config(command = lambda: self.master.switch(FilterMenu))
 
             self.option_button.destroy()
@@ -342,7 +370,7 @@ class EntryMenu(CreateMenu):
             options.add_command(label='View Family Tree', command = self.openRecord)
             options.add_command(label='Edit Record', state='disabled')
             options.add_separator()
-            options.add_command(label='Delete Record', state='disabled')
+            options.add_command(label='Delete Record', command = self.delete)
             self.option_button.grid(row=0, column=1, sticky='n')
 
 # main script - create a db object, start gui
