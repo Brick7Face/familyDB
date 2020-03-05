@@ -155,6 +155,7 @@ class DisplayMenu(MenuFrame):
         self.display_box.bind('<<TreeviewOpen>>', self.openRecord)
 
     def search(self, filter, record):
+        self.option_button.config(state='disabled')
         result = db.choice("Search", filter, record)
         if (result != None):
             self.updateDisplay(result)
@@ -165,7 +166,11 @@ class DisplayMenu(MenuFrame):
     def searchMultiple(self, names):
         results = []
         for name in names:
-            result = db.choice("Search", "Name", name)
+            result = None
+            try:
+                result = db.choice("Search", "ID", int(name))
+            except ValueError:
+                result = db.choice("Search", "Name", name)
             if (result != None):
                 results = results + result
         if (len(results) > 0):
@@ -209,8 +214,8 @@ class CreatePersonMenu(DisplayMenu):
         self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
         name_label = tk.Label(self.mid_frame, text = "Enter name")
-        parent1_label = tk.Label(self.mid_frame, text = "Enter father")
-        parent2_label = tk.Label(self.mid_frame, text = "Enter mother")
+        parent1_label = tk.Label(self.mid_frame, text = "Enter father name or ID")
+        parent2_label = tk.Label(self.mid_frame, text = "Enter mother name or ID")
         dob_label = tk.Label(self.mid_frame, text = "Enter DOB (YYYY-MM-DD)")
         dod_label = tk.Label(self.mid_frame, text = "Enter DOD (YYYY-MM-DD)")
         birthplace_label = tk.Label(self.mid_frame, text = "Enter birthplace")
@@ -257,6 +262,8 @@ class CreatePersonMenu(DisplayMenu):
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage("Person created successfully.", "green")
+        else:
+            self.updateMessage("Marriage record for parents not found.\nTry creating a marriage record first.", "red")
 
 class EditPersonMenu(CreatePersonMenu):
     def __init__(self, master=None, **kwargs):
@@ -315,8 +322,8 @@ class CreateMarriageMenu(DisplayMenu):
         self.option_button.config(text = 'Create', state='enabled', command = self.createMarriage)
         self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
-        parent1_label = tk.Label(self.mid_frame, text = "Enter father")
-        parent2_label = tk.Label(self.mid_frame, text = "Enter mother")
+        parent1_label = tk.Label(self.mid_frame, text = "Enter father name or ID")
+        parent2_label = tk.Label(self.mid_frame, text = "Enter mother name or ID")
         date_label = tk.Label(self.mid_frame, text = "Enter marriage date (YYYY-MM-DD)")
 
         self.parent1_entry = tk.Entry(self.mid_frame)
