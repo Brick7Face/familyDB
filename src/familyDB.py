@@ -168,7 +168,7 @@ class FamilyDB:
         mydb = self.mydb
 
         for i, attr in enumerate(entry[0:6]):
-            if (attr == "None" or attr.strip() == ""):
+            if (attr.strip() == ""):
                 entry[i] = None
 
         if (table == "Person"):

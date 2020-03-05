@@ -223,9 +223,7 @@ class CreatePersonMenu(DisplayMenu):
 
         self.name_entry = tk.Entry(self.mid_frame)
         self.parent1_entry = tk.Entry(self.mid_frame)
-        self.parent1_entry.insert(0, "None")
         self.parent2_entry = tk.Entry(self.mid_frame)
-        self.parent2_entry.insert(0, "None")
         self.dob_entry = tk.Entry(self.mid_frame, width = 9)
         self.dob_entry.insert(0, "0000-00-00")
         self.dod_entry = tk.Entry(self.mid_frame, width = 9)
