@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import sys
+import sys, re
 import familyDB, treeframe
 
 # main functionality controlled from here
@@ -257,8 +257,20 @@ class CreatePersonMenu(DisplayMenu):
         if (self.name_entry.get().strip() == ""):
             self.updateMessage("Name cannot be empty.", "red")
             return
+        if (self.dob_entry.get().strip() == ""):
+            self.updateMessage("DOB cannot be empty.", "red")
+            return
+        elif not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dob_entry.get())):
+            self.updateMessage("DOB is not formatted correctly.", "red")
+            return
+        if not (self.dod_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dod_entry.get())):
+            self.updateMessage("DOD is not formatted correctly.", "red")
+            return
+        if (self.birthplace_entry.get().strip() == ""):
+            self.updateMessage("Birthplace cannot be empty.", "red")
+            return
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
-        result = db.create("Person", personEntries)
+        result = db.createOrUpdate("Person", personEntries, True)
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage("Person created successfully.", "green")
@@ -306,11 +318,25 @@ class EditPersonMenu(CreatePersonMenu):
         if (self.name_entry.get().strip() == ""):
             self.updateMessage("Name cannot be empty.", "red")
             return
+        if (self.dob_entry.get().strip() == ""):
+            self.updateMessage("DOB cannot be empty.", "red")
+            return
+        elif not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dob_entry.get())):
+            self.updateMessage("DOB is not formatted correctly.", "red")
+            return
+        if not (self.dod_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dod_entry.get())):
+            self.updateMessage("DOD is not formatted correctly.", "red")
+            return
+        if (self.birthplace_entry.get().strip() == ""):
+            self.updateMessage("Birthplace cannot be empty.", "red")
+            return
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get(), self.id_num ]
-        result = db.update(personEntries)
+        result = db.createOrUpdate("Person", personEntries, False)
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage(" ".join([self.name_entry.get(), "updated successfully."]), "green")
+        else:
+            self.updateMessage("Marriage record for parents not found.\nTry creating a marriage record first.", "red")
 
 
 # menu frame for creating a Marriage record, with entries
@@ -348,11 +374,16 @@ class CreateMarriageMenu(DisplayMenu):
         if (self.parent2_entry.get().strip() == ""):
             self.updateMessage("Mother cannot be empty.", "red")
             return
+        if not (self.date_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.date_entry.get())):
+            self.updateMessage("Date is not formatted correctly.", "red")
+            return
         marriageEntries = [ self.parent1_entry.get(), self.parent2_entry.get(), self.date_entry.get() ]
-        result = db.create("Marriage", marriageEntries)
+        result = db.createOrUpdate("Marriage", marriageEntries, True)
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage("Marriage created successfully.", "green")
+        else:
+            self.updateMessage("Entries were incorrect.\nMake sure the name or ID is exact.", "red")
 
 # menu frame for picking search filter
 class FilterMenu(MenuFrame):
