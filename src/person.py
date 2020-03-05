@@ -11,8 +11,11 @@ class Person:
             self.dod = "Alive"
         else:
             self.dod = dod
-        self.birthplace = birthplace
-        if (deathplace==None or deathplace=="None"):
+        if (birthplace == None or birthplace == "None"):
+            self.birthplace = ""
+        else:
+            self.birthplace = birthplace
+        if (deathplace == None or deathplace == "None"):
             self.deathplace = ""
         else:
             self.deathplace = deathplace

@@ -225,13 +225,9 @@ class CreatePersonMenu(DisplayMenu):
         self.parent1_entry = tk.Entry(self.mid_frame)
         self.parent2_entry = tk.Entry(self.mid_frame)
         self.dob_entry = tk.Entry(self.mid_frame, width = 9)
-        self.dob_entry.insert(0, "0000-00-00")
         self.dod_entry = tk.Entry(self.mid_frame, width = 9)
-        self.dod_entry.insert(0, "0000-00-00")
         self.birthplace_entry = tk.Entry(self.mid_frame)
-        self.birthplace_entry.insert(0, "Unknown")
         self.deathplace_entry = tk.Entry(self.mid_frame)
-        self.deathplace_entry.insert(0, "Unknown")
 
         name_label.grid(row=0, column=0, sticky='w')
         self.name_entry.grid(row=0, column=1, sticky='e')
@@ -252,22 +248,22 @@ class CreatePersonMenu(DisplayMenu):
 
     # fetch entries, build record in DB class
     def createPerson(self):
+        dob = None
+        birthplace = None
         if (self.name_entry.get().strip() == ""):
             self.updateMessage("Name cannot be empty.", "red")
             return
         if (self.dob_entry.get().strip() == ""):
-            self.updateMessage("DOB cannot be empty.", "red")
-            return
+            dob = "0000-00-00"
         elif not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dob_entry.get())):
             self.updateMessage("DOB is not formatted correctly.", "red")
             return
+        else:
+            dob = self.dob_entry.get()
         if not (self.dod_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dod_entry.get())):
             self.updateMessage("DOD is not formatted correctly.", "red")
             return
-        if (self.birthplace_entry.get().strip() == ""):
-            self.updateMessage("Birthplace cannot be empty.", "red")
-            return
-        personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
+        personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), dob, self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
         result = db.createOrUpdate("Person", personEntries, True)
         if (len(result) > 0):
             self.updateDisplay(result)
@@ -293,42 +289,41 @@ class EditPersonMenu(CreatePersonMenu):
         self.name_entry.insert(0, record[0][0][1])
         self.parent1_entry.delete(0, 'end')
         if (record[2][1][1] == 'Unknown'):
-            record[2][1][1] = 'None'
+            record[2][1][1] = ''
         self.parent1_entry.insert(0, record[2][1][1])
         self.parent2_entry.delete(0, 'end')
         if (record[2][0][1] == 'Unknown'):
-            record[2][0][1] = 'None'
+            record[2][0][1] = ''
         self.parent2_entry.insert(0, record[2][0][1])
         self.dob_entry.delete(0, 'end')
+        if (record[0][0][2] == '0000-00-00'):
+            record[0][0][2] = ''
         self.dob_entry.insert(0, record[0][0][2])
         self.dod_entry.delete(0, 'end')
         if (record[0][0][4] == 'Alive'):
-            record[0][0][4] = 'None'
+            record[0][0][4] = ''
         self.dod_entry.insert(0, record[0][0][4])
         self.birthplace_entry.delete(0, 'end')
         self.birthplace_entry.insert(0, record[0][0][3])
         self.deathplace_entry.delete(0, 'end')
-        if (record[0][0][5] == ''):
-            record[0][0][5] = 'None'
         self.deathplace_entry.insert(0, record[0][0][5])
 
     def updatePerson(self):
+        dob = None
         if (self.name_entry.get().strip() == ""):
             self.updateMessage("Name cannot be empty.", "red")
             return
         if (self.dob_entry.get().strip() == ""):
-            self.updateMessage("DOB cannot be empty.", "red")
-            return
+            dob = "0000-00-00"
         elif not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dob_entry.get())):
             self.updateMessage("DOB is not formatted correctly.", "red")
             return
+        else:
+            dob = self.dob_entry.get()
         if not (self.dod_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dod_entry.get())):
             self.updateMessage("DOD is not formatted correctly.", "red")
             return
-        if (self.birthplace_entry.get().strip() == ""):
-            self.updateMessage("Birthplace cannot be empty.", "red")
-            return
-        personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get(), self.id_num ]
+        personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), dob, self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get(), self.id_num ]
         result = db.createOrUpdate("Person", personEntries, False)
         if (len(result) > 0):
             self.updateDisplay(result)
@@ -353,7 +348,6 @@ class CreateMarriageMenu(DisplayMenu):
         self.parent1_entry = tk.Entry(self.mid_frame)
         self.parent2_entry = tk.Entry(self.mid_frame)
         self.date_entry = tk.Entry(self.mid_frame, width = 9)
-        self.date_entry.insert(0, "0000-00-00")
 
         parent1_label.grid(row=0, column=0, sticky='w')
         self.parent1_entry.grid(row=0, column=1, sticky='e')
