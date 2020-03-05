@@ -15,9 +15,10 @@ class FamilyDB:
         return sqlDB
 
     def clearDB(self, cursor):
-        cursor.execute("DROP TABLE IF EXISTS Marriage")
-        cursor.execute("DROP TABLE IF EXISTS Person")
-        time.sleep(1)
+        #cursor.execute("DROP TABLE IF EXISTS Marriage")
+        #cursor.execute("DROP TABLE IF EXISTS Person")
+        cursor.execute("DELETE FROM Person")
+        cursor.execute("DELETE FROM Marriage")
 
     # Populate the database using the imported lists from records.py
     def populate(self, cursor):
@@ -37,27 +38,41 @@ class FamilyDB:
             return returnList
         except ValueError as error:
             return(["ValueError:", str(error), "red"])
-        except sqlite3.IntegrityError as error2:
+        except sqlite3.IntegrityError:
             return(["Warning:", "Some records already exist.", "orange"])
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
+        exact = False
         if filter=="":
             filter = "Name"
         query = ""
         if filter=="Name":
+            record = record.strip()
             query = "SELECT * FROM Person WHERE Name LIKE ? ORDER BY PersonID ASC"
         elif filter=="Birthday":
+            record = record.strip()
             query = "SELECT * FROM Person WHERE DOB LIKE ?"
         elif filter=="Birthplace":
+            record = record.strip()
             query = "SELECT * FROM Person WHERE Birthplace LIKE ? ORDER BY DOB ASC"
         elif filter=="Deathplace":
+            record = record.strip()
             query = "SELECT * FROM Person WHERE Deathplace LIKE ? ORDER BY DOD ASC"
-        elif filter=="Return":
+        elif filter=="ID":
+            record = str(record)
+            query = "SELECT * FROM Person WHERE PersonID = ?"
+            exact = True
+        else:
             return
 
-        cursor.execute(query, [ "%" + record + "%" ])
-        result = cursor.fetchall()
+        result = []
+        if exact:
+            cursor.execute(query, [ record] )
+            result = cursor.fetchall()
+        else:
+            cursor.execute(query, [ "%" + record + "%" ])
+            result = cursor.fetchall()
         personList = []
         if len(result)==0:
             return
@@ -148,31 +163,84 @@ class FamilyDB:
 
 
     # Create a record in either Person or Marriage
-    def create(self, table, entry):
+    def createOrUpdate(self, table, entry, create):
         cursor = self.cur
         mydb = self.mydb
 
-        for i, attr in enumerate(entry):
-            if (attr == "None"):
+        for i, attr in enumerate(entry[0:6]):
+            if (attr.strip() == ""):
                 entry[i] = None
 
         if (table == "Person"):
-            cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = (SELECT PersonID FROM Person WHERE Name = ?) AND Partner2 = (SELECT PersonID FROM Person WHERE Name = ?)", [ entry[1], entry[2] ])
-            parentsID = cursor.fetchall()
-            if (len(parentsID) == 0):
-                cursor.execute("INSERT INTO Person (Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?)", [ entry[0], None, entry[3], entry[4], entry[5], entry[6] ])
+            if (entry[1] == None and entry[2] == None):
+                if create:
+                    cursor.execute("INSERT INTO Person (Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?)", [ entry[0], None, entry[3], entry[4], entry[5], entry[6] ])
+                else:
+                    cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], None, entry[3], entry[4], entry[5], entry[6], entry[7] ])
+            elif (entry[1] == None or entry[2] == None):
+                return []
             else:
-                cursor.execute("INSERT INTO Person (Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?)", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6] ])
+                parent1Int = False
+                parent2Int = False
+                try:
+                    int(entry[1])
+                    parent1Int = True
+                except ValueError:
+                    parent1Int = False
+                try:
+                    int(entry[2])
+                    parent2Int = True
+                except ValueError:
+                    parent2Int = False
+
+                parentsID = []
+                if (parent1Int and parent2Int):
+                    cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = ? AND Partner2 = ?", [ int(entry[1]), int(entry[2]) ])
+                    parentsID = cursor.fetchall()
+                elif (parent1Int and not parent2Int):
+                    cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = ? AND Partner2 = (SELECT PersonID FROM Person WHERE Name = ?)", [ int(entry[1]), entry[2] ])
+                    parentsID = cursor.fetchall()
+                elif (parent2Int and not parent1Int):
+                    cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = (SELECT PersonID FROM Person WHERE Name = ?) AND Partner2 = ?", [ entry[1], int(entry[2]) ])
+                    parentsID = cursor.fetchall()
+                else:
+                    cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = (SELECT PersonID FROM Person WHERE Name = ?) AND Partner2 = (SELECT PersonID FROM Person WHERE Name = ?)", [ entry[1], entry[2] ])
+                    parentsID = cursor.fetchall()
+
+                if (len(parentsID) == 0):
+                    return []
+                else:
+                    if create:
+                        cursor.execute("INSERT INTO Person (Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?)", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6] ])
+                    else:
+                        cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6], entry[7] ])
             mydb.commit()
-            cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ cursor.lastrowid ])
+
+            record = []
+            if create:
+                cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ cursor.lastrowid ])
+            else:
+                cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ entry[7] ])
             record = cursor.fetchall()
             person = Person(record[0][0], record[0][1], record[0][2], record[0][3], record[0][4], record[0][5], record[0][6])
             return [ person.toString() ]
         else:
-            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[0] ])
-            parent1 = cursor.fetchall()
-            cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[1] ])
-            parent2 = cursor.fetchall()
+            parent1 = []
+            parent2 = []
+            try:
+                cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ int(entry[0]) ])
+                parent1 = cursor.fetchall()
+            except ValueError:
+                cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[0] ])
+                parent1 = cursor.fetchall()
+            try:
+                cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ int(entry[1]) ])
+                parent2 = cursor.fetchall()
+            except ValueError:
+                cursor.execute("SELECT * FROM Person WHERE Name = ?", [ entry[1] ])
+                parent2 = cursor.fetchall()
+            if (len(parent1) == 0 or len(parent2) == 0):
+                return []
             cursor.execute("INSERT INTO Marriage (Partner1, Partner2, Date) VALUES (?, ?, ?)", [ parent1[0][0], parent2[0][0], entry[2] ])
             mydb.commit()
             returnList = []
@@ -180,26 +248,6 @@ class FamilyDB:
                 person = Person(parent[0][0], parent[0][1], parent[0][2], parent[0][3], parent[0][4], parent[0][5], parent[0][6])
                 returnList.append(person.toString())
             return returnList
-
-    def update(self, entry):
-        cursor = self.cur
-        mydb = self.mydb
-
-        for i, attr in enumerate(entry):
-            if (attr == "None"):
-                entry[i] = None
-
-        cursor.execute("SELECT MarriageID FROM Marriage WHERE Partner1 = (SELECT PersonID FROM Person WHERE Name = ?) AND Partner2 = (SELECT PersonID FROM Person WHERE Name = ?)", [ entry[1], entry[2] ])
-        parentsID = cursor.fetchall()
-        if (len(parentsID) == 0):
-            cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], None, entry[3], entry[4], entry[5], entry[6], entry[7] ])
-        else:
-            cursor.execute("UPDATE Person SET Name = ?, ParentsMarriageID = ?, DOB = ?, DOD = ?, Birthplace = ?, Deathplace = ? WHERE PersonID = ?", [ entry[0], parentsID[0][0], entry[3], entry[4], entry[5], entry[6], entry[7] ])
-        mydb.commit()
-        cursor.execute("SELECT * FROM Person WHERE PersonID = ?", [ entry[7] ])
-        record = cursor.fetchall()
-        person = Person(record[0][0], record[0][1], record[0][2], record[0][3], record[0][4], record[0][5], record[0][6])
-        return [ person.toString() ]
 
     # Delete a Person record; will cascade to marriage if necessary
     def delete(self, id_num):
@@ -220,8 +268,6 @@ class FamilyDB:
     def choice(self, choice, filter, entry):
         cur = self.cur
         mydb = self.mydb
-
-        entry = entry.strip()
 
         if choice=="Search":
             if (entry==""):

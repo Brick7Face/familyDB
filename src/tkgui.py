@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
-import sys
+import sys, re
 import familyDB, treeframe
 
 # main functionality controlled from here
@@ -21,7 +21,7 @@ class Main(tk.Tk):
         self.currentFrame = f
 
     # change the frame in main view
-    def switch(self, frame, label="", filter=""):
+    def switch(self, frame, label="", filter="", id_num=""):
         self.currentFrame.destroy()
         f = frame(self)
         self.currentFrame = f
@@ -31,7 +31,7 @@ class Main(tk.Tk):
             f.setFilter(filter)
             f.updateDisplay("")
         elif (frame == EditPersonMenu):
-            f.updateDefaults(label)
+            f.updateDefaults(id_num, label, filter)
 
     # quit
     def callback(self):
@@ -155,6 +155,7 @@ class DisplayMenu(MenuFrame):
         self.display_box.bind('<<TreeviewOpen>>', self.openRecord)
 
     def search(self, filter, record):
+        self.option_button.config(state='disabled')
         result = db.choice("Search", filter, record)
         if (result != None):
             self.updateDisplay(result)
@@ -165,7 +166,11 @@ class DisplayMenu(MenuFrame):
     def searchMultiple(self, names):
         results = []
         for name in names:
-            result = db.choice("Search", "Name", name)
+            result = None
+            try:
+                result = db.choice("Search", "ID", int(name))
+            except ValueError:
+                result = db.choice("Search", "Name", name)
             if (result != None):
                 results = results + result
         if (len(results) > 0):
@@ -209,8 +214,8 @@ class CreatePersonMenu(DisplayMenu):
         self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
         name_label = tk.Label(self.mid_frame, text = "Enter name")
-        parent1_label = tk.Label(self.mid_frame, text = "Enter father")
-        parent2_label = tk.Label(self.mid_frame, text = "Enter mother")
+        parent1_label = tk.Label(self.mid_frame, text = "Enter father name or ID")
+        parent2_label = tk.Label(self.mid_frame, text = "Enter mother name or ID")
         dob_label = tk.Label(self.mid_frame, text = "Enter DOB (YYYY-MM-DD)")
         dod_label = tk.Label(self.mid_frame, text = "Enter DOD (YYYY-MM-DD)")
         birthplace_label = tk.Label(self.mid_frame, text = "Enter birthplace")
@@ -218,9 +223,7 @@ class CreatePersonMenu(DisplayMenu):
 
         self.name_entry = tk.Entry(self.mid_frame)
         self.parent1_entry = tk.Entry(self.mid_frame)
-        self.parent1_entry.insert(0, "None")
         self.parent2_entry = tk.Entry(self.mid_frame)
-        self.parent2_entry.insert(0, "None")
         self.dob_entry = tk.Entry(self.mid_frame, width = 9)
         self.dob_entry.insert(0, "0000-00-00")
         self.dod_entry = tk.Entry(self.mid_frame, width = 9)
@@ -252,23 +255,37 @@ class CreatePersonMenu(DisplayMenu):
         if (self.name_entry.get().strip() == ""):
             self.updateMessage("Name cannot be empty.", "red")
             return
+        if (self.dob_entry.get().strip() == ""):
+            self.updateMessage("DOB cannot be empty.", "red")
+            return
+        elif not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dob_entry.get())):
+            self.updateMessage("DOB is not formatted correctly.", "red")
+            return
+        if not (self.dod_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dod_entry.get())):
+            self.updateMessage("DOD is not formatted correctly.", "red")
+            return
+        if (self.birthplace_entry.get().strip() == ""):
+            self.updateMessage("Birthplace cannot be empty.", "red")
+            return
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get() ]
-        result = db.create("Person", personEntries)
+        result = db.createOrUpdate("Person", personEntries, True)
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage("Person created successfully.", "green")
+        else:
+            self.updateMessage("Marriage record for parents not found.\nTry creating a marriage record first.", "red")
 
 class EditPersonMenu(CreatePersonMenu):
     def __init__(self, master=None, **kwargs):
         CreatePersonMenu.__init__(self, master, **kwargs)
 
         self.option_button.config(text = 'Update', state='enabled', command = self.updatePerson)
-        self.back_button.config(command = lambda: master.switch(FilterMenu))
-
         self.id_num = None
 
-    def updateDefaults(self, id_num):
+    def updateDefaults(self, id_num, label, filter):
         self.top_bar.config(text = "Edit record", fg = "blue")
+        self.back_button.config(command = lambda: self.master.switch(EntryMenu, label, filter))
+
         record = db.relate(id_num)
 
         self.id_num = record[0][0][0]
@@ -299,11 +316,25 @@ class EditPersonMenu(CreatePersonMenu):
         if (self.name_entry.get().strip() == ""):
             self.updateMessage("Name cannot be empty.", "red")
             return
+        if (self.dob_entry.get().strip() == ""):
+            self.updateMessage("DOB cannot be empty.", "red")
+            return
+        elif not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dob_entry.get())):
+            self.updateMessage("DOB is not formatted correctly.", "red")
+            return
+        if not (self.dod_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.dod_entry.get())):
+            self.updateMessage("DOD is not formatted correctly.", "red")
+            return
+        if (self.birthplace_entry.get().strip() == ""):
+            self.updateMessage("Birthplace cannot be empty.", "red")
+            return
         personEntries = [ self.name_entry.get(), self.parent1_entry.get(), self.parent2_entry.get(), self.dob_entry.get(), self.dod_entry.get(), self.birthplace_entry.get(), self.deathplace_entry.get(), self.id_num ]
-        result = db.update(personEntries)
+        result = db.createOrUpdate("Person", personEntries, False)
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage(" ".join([self.name_entry.get(), "updated successfully."]), "green")
+        else:
+            self.updateMessage("Marriage record for parents not found.\nTry creating a marriage record first.", "red")
 
 
 # menu frame for creating a Marriage record, with entries
@@ -315,8 +346,8 @@ class CreateMarriageMenu(DisplayMenu):
         self.option_button.config(text = 'Create', state='enabled', command = self.createMarriage)
         self.back_button.config(command = lambda: master.switch(PopulateMenu))
 
-        parent1_label = tk.Label(self.mid_frame, text = "Enter father")
-        parent2_label = tk.Label(self.mid_frame, text = "Enter mother")
+        parent1_label = tk.Label(self.mid_frame, text = "Enter father name or ID")
+        parent2_label = tk.Label(self.mid_frame, text = "Enter mother name or ID")
         date_label = tk.Label(self.mid_frame, text = "Enter marriage date (YYYY-MM-DD)")
 
         self.parent1_entry = tk.Entry(self.mid_frame)
@@ -341,11 +372,16 @@ class CreateMarriageMenu(DisplayMenu):
         if (self.parent2_entry.get().strip() == ""):
             self.updateMessage("Mother cannot be empty.", "red")
             return
+        if not (self.date_entry.get().strip() == "") and not (re.match(r"\d\d\d\d-\d\d-\d\d", self.date_entry.get())):
+            self.updateMessage("Date is not formatted correctly.", "red")
+            return
         marriageEntries = [ self.parent1_entry.get(), self.parent2_entry.get(), self.date_entry.get() ]
-        result = db.create("Marriage", marriageEntries)
+        result = db.createOrUpdate("Marriage", marriageEntries, True)
         if (len(result) > 0):
             self.updateDisplay(result)
             self.updateMessage("Marriage created successfully.", "green")
+        else:
+            self.updateMessage("Entries were incorrect.\nMake sure the name or ID is exact.", "red")
 
 # menu frame for picking search filter
 class FilterMenu(MenuFrame):
@@ -372,6 +408,7 @@ class EntryMenu(DisplayMenu):
         DisplayMenu.__init__(self, master, **kwargs)
 
         self.filter = ""
+        self.label = ""
         self.master = master
 
         self.labelW = tk.Label(self.mid_frame)
@@ -396,8 +433,9 @@ class EntryMenu(DisplayMenu):
 
     # update the label for the entry widget based on context
     def setLabel(self, label):
+        self.label = label
         self.entryW.delete('0', tk.END)
-        self.labelW.config(text = label)
+        self.labelW.config(text = self.label)
         self.labelW.update()
 
     # set the filter to send to the db search function
@@ -418,7 +456,7 @@ class EntryMenu(DisplayMenu):
             options = tk.Menu(self.option_button)
             self.option_button.config(menu=options)
             options.add_command(label='View Family Tree', command = self.openRecord)
-            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.display_box.item(self.display_box.selection()).get("values")[0]))
+            options.add_command(label='Edit Record', command = lambda: self.master.switch(EditPersonMenu, self.label, self.filter, self.display_box.item(self.display_box.selection()).get("values")[0]))
             options.add_separator()
             options.add_command(label='Delete Record', command = self.delete)
             self.option_button.grid(row=0, column=1, sticky='n')
