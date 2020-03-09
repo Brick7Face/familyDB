@@ -33,10 +33,6 @@ class Main(tk.Tk):
         elif (frame == EditPersonMenu):
             f.updateDefaults(id_num, label, filter)
 
-    # quit
-    def callback(self):
-        self.destroy()
-
     # populate .db file
     def populate(self):
         string = db.choice("Populate", "", "")
@@ -97,7 +93,7 @@ class MainMenu(MenuFrame):
         # create widgets
         search_button = ttk.Button(self.mid_frame, text = 'Search', width = 20, command = lambda: master.switch(FilterMenu))
         populate_button = ttk.Button(self.mid_frame, text = 'Populate Database', width = 20, command = lambda: master.switch(PopulateMenu))
-        quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 20, command = master.callback)
+        quit_button = ttk.Button(self.bottom_frame, text = 'Quit', width = 20, command = master.destroy)
 
         # place the widgets
         search_button.grid()
