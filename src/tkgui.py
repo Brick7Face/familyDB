@@ -194,7 +194,10 @@ class DisplayMenu(MenuFrame):
         for row in display_box.get_children(''):
             if (column == 'ID' or column == 'Age'):
                 # cast to integer for numbered columns
-                rows.append([int(display_box.set(row, column)), row])
+                if (display_box.set(row, column) == 'None'):
+                    rows.append([0, row])
+                else:
+                    rows.append([int(display_box.set(row, column)), row])
             else:
                 rows.append([display_box.set(row, column), row])
         # Don't reverse order the first click
