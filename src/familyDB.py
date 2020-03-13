@@ -14,17 +14,18 @@ class FamilyDB:
         sqlDB = sqlite3.connect('family.db')
         return sqlDB
 
-    def clearDB(self, cursor):
+    def clearDB(self, mydb, cursor):
         #cursor.execute("DROP TABLE IF EXISTS Marriage")
         #cursor.execute("DROP TABLE IF EXISTS Person")
         cursor.execute("DELETE FROM Person")
         cursor.execute("DELETE FROM Marriage")
+        mydb.commit()
 
     # Populate the database using the imported lists from records.py
-    def populate(self, cursor):
+    def populate(self, mydb, cursor):
         cursor.execute("CREATE TABLE IF NOT EXISTS Person ( PersonID INTEGER PRIMARY KEY AUTOINCREMENT, Name TINYTEXT NOT NULL, ParentsMarriageID INT, DOB DATE, DOD DATE, Birthplace TINYTEXT, Deathplace TINYTEXT, FOREIGN KEY(ParentsMarriageID) REFERENCES Marriage(MarriageID) ON DELETE CASCADE )")
         cursor.execute("CREATE TABLE IF NOT EXISTS Marriage ( MarriageID INTEGER PRIMARY KEY AUTOINCREMENT, Partner1 INT, Partner2 INT, Date DATE, FOREIGN KEY(Partner1) REFERENCES Person(PersonID) ON DELETE SET NULL, FOREIGN KEY(Partner2) REFERENCES Person(PersonID) ON DELETE SET NULL )")
-
+        # try inserting records from records.py
         try:
             returnList = []
             sql = "INSERT INTO Person (PersonID, Name, ParentsMarriageID, DOB, DOD, Birthplace, Deathplace) VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -35,31 +36,34 @@ class FamilyDB:
             cursor.executemany(sql2, marriageRecords)
             returnList.append("".join([str(cursor.rowcount), " records were inserted into table Marriage."]))
             returnList.append("green")
+            mydb.commit()
             return returnList
+        # catch and print error if insert fails
         except ValueError as error:
             return(["ValueError:", str(error), "red"])
+        # catch and print error if records already exist
         except sqlite3.IntegrityError:
             return(["Warning:", "Some records already exist.", "orange"])
 
     # Search the database by name, birthdate, birthplace or deathplace
     def searchDB(self, cursor, filter, record):
         exact = False
-        if filter=="":
+        if filter == "":
             filter = "Name"
         query = ""
-        if filter=="Name":
+        if filter == "Name":
             record = record.strip()
             query = "SELECT * FROM Person WHERE Name LIKE ? ORDER BY PersonID ASC"
-        elif filter=="Birthday":
+        elif filter == "Birthday":
             record = record.strip()
             query = "SELECT * FROM Person WHERE DOB LIKE ?"
-        elif filter=="Birthplace":
+        elif filter == "Birthplace":
             record = record.strip()
             query = "SELECT * FROM Person WHERE Birthplace LIKE ? ORDER BY DOB ASC"
-        elif filter=="Deathplace":
+        elif filter == "Deathplace":
             record = record.strip()
             query = "SELECT * FROM Person WHERE Deathplace LIKE ? ORDER BY DOD ASC"
-        elif filter=="ID":
+        elif filter == "ID":
             record = str(record)
             query = "SELECT * FROM Person WHERE PersonID = ?"
             exact = True
@@ -68,7 +72,7 @@ class FamilyDB:
 
         result = []
         if exact:
-            cursor.execute(query, [ record] )
+            cursor.execute(query, [ record ] )
             result = cursor.fetchall()
         else:
             cursor.execute(query, [ "%" + record + "%" ])
@@ -104,9 +108,13 @@ class FamilyDB:
     # Send back parents
     def getParents(self, cursor, id_num):
         cursor.execute("SELECT * FROM \
-            (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
+            (SELECT * FROM Person INNER JOIN Marriage ON PersonID=Partner1) WHERE MarriageID = \
                 (SELECT ParentsMarriageID FROM Person where PersonID = ?)", [ id_num ])
         result = cursor.fetchall()
+        cursor.execute("SELECT * FROM \
+            (SELECT * FROM Person INNER JOIN Marriage ON PersonID=Partner2) WHERE MarriageID = \
+                (SELECT ParentsMarriageID FROM Person where PersonID = ?)", [ id_num ])
+        result = result + cursor.fetchall()
         parentsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
@@ -269,14 +277,12 @@ class FamilyDB:
         cur = self.cur
         mydb = self.mydb
 
-        if choice=="Search":
-            if (entry==""):
+        if choice == "Search":
+            if (entry == ""):
                 return
             return self.searchDB(cur, filter, entry)
-        elif choice=="Populate":
-            returnStr = self.populate(cur)
-            mydb.commit()
+        elif choice == "Populate":
+            returnStr = self.populate(mydb, cur)
             return returnStr
-        elif choice=="ClearDB":
-            self.clearDB(cur)
-            mydb.commit()
+        elif choice == "ClearDB":
+            self.clearDB(mydb, cur)
