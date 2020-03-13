@@ -287,13 +287,13 @@ class EditPersonMenu(CreatePersonMenu):
 
         self.name_entry.insert(0, record[0][0][1])
         self.parent1_entry.delete(0, 'end')
-        if (record[2][1][1] == 'Unknown'):
-            record[2][1][1] = ''
-        self.parent1_entry.insert(0, record[2][1][1])
-        self.parent2_entry.delete(0, 'end')
         if (record[2][0][1] == 'Unknown'):
             record[2][0][1] = ''
-        self.parent2_entry.insert(0, record[2][0][1])
+        self.parent1_entry.insert(0, record[2][0][1])
+        self.parent2_entry.delete(0, 'end')
+        if (record[2][1][1] == 'Unknown'):
+            record[2][1][1] = ''
+        self.parent2_entry.insert(0, record[2][1][1])
         self.dob_entry.delete(0, 'end')
         if (record[0][0][2] == '0000-00-00'):
             record[0][0][2] = ''

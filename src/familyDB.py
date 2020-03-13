@@ -108,9 +108,13 @@ class FamilyDB:
     # Send back parents
     def getParents(self, cursor, id_num):
         cursor.execute("SELECT * FROM \
-            (SELECT * FROM Person INNER JOIN Marriage ON (PersonID=Partner1 OR PersonID=Partner2)) WHERE MarriageID = \
+            (SELECT * FROM Person INNER JOIN Marriage ON PersonID=Partner1) WHERE MarriageID = \
                 (SELECT ParentsMarriageID FROM Person where PersonID = ?)", [ id_num ])
         result = cursor.fetchall()
+        cursor.execute("SELECT * FROM \
+            (SELECT * FROM Person INNER JOIN Marriage ON PersonID=Partner2) WHERE MarriageID = \
+                (SELECT ParentsMarriageID FROM Person where PersonID = ?)", [ id_num ])
+        result = result + cursor.fetchall()
         parentsList = []
         for record in result:
             person = Person(record[0], record[1], record[2], record[3], record[4], record[5], record[6])
