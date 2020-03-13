@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from familyDBRecords.records import personRecords, marriageRecords
+from records import personRecords, marriageRecords
 from person import Person
 
 class FamilyDB:
@@ -14,7 +14,7 @@ class FamilyDB:
         sqlDB = sqlite3.connect('family.db')
         return sqlDB
 
-    def clearDB(self, cursor):
+    def clearDB(self, mydb, cursor):
         #cursor.execute("DROP TABLE IF EXISTS Marriage")
         #cursor.execute("DROP TABLE IF EXISTS Person")
         cursor.execute("DELETE FROM Person")
@@ -22,7 +22,7 @@ class FamilyDB:
         mydb.commit()
 
     # Populate the database using the imported lists from records.py
-    def populate(self, cursor):
+    def populate(self, mydb, cursor):
         cursor.execute("CREATE TABLE IF NOT EXISTS Person ( PersonID INTEGER PRIMARY KEY AUTOINCREMENT, Name TINYTEXT NOT NULL, ParentsMarriageID INT, DOB DATE, DOD DATE, Birthplace TINYTEXT, Deathplace TINYTEXT, FOREIGN KEY(ParentsMarriageID) REFERENCES Marriage(MarriageID) ON DELETE CASCADE )")
         cursor.execute("CREATE TABLE IF NOT EXISTS Marriage ( MarriageID INTEGER PRIMARY KEY AUTOINCREMENT, Partner1 INT, Partner2 INT, Date DATE, FOREIGN KEY(Partner1) REFERENCES Person(PersonID) ON DELETE SET NULL, FOREIGN KEY(Partner2) REFERENCES Person(PersonID) ON DELETE SET NULL )")
         # try inserting records from records.py
@@ -278,7 +278,7 @@ class FamilyDB:
                 return
             return self.searchDB(cur, filter, entry)
         elif choice == "Populate":
-            returnStr = self.populate(cur)
+            returnStr = self.populate(mydb, cur)
             return returnStr
         elif choice == "ClearDB":
-            self.clearDB(cur)
+            self.clearDB(mydb, cur)
