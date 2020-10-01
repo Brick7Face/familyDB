@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from datetime import datetime
 import sys, re
 import familyDB, treeframe
 
@@ -440,6 +441,8 @@ class EntryMenu(DisplayMenu):
             self.back_button.config(command = lambda: self.master.switch(PopulateMenu))
             self.option_button.config(text = "Delete", command = self.delete)
         else:
+            if (self.filter=="Birthday"):
+                self.entryW.insert(0, datetime.today().strftime('-%m-%d'))
             self.top_bar.config(text = "Search for person by " + filter.lower(), fg = "blue")
             self.submit_button.config(text = 'Search', command = lambda: self.search(self.filter, self.entryW.get()))
             self.back_button.config(command = lambda: self.master.switch(FilterMenu))
